@@ -1,14 +1,37 @@
-import { IconFileDownload } from '@tabler/icons-react';
-import { Button, Container, FileInput, Flex } from '@mantine/core';
+import { IconFileDownload, IconMoon, IconSun } from '@tabler/icons-react';
+import { fs } from "@zip.js/zip.js";
+import gameData from '/src/assets/data/media_soviet.zip?url';
+import cx from 'clsx';
+import { ActionIcon, AppShell, Button, FileInput, Flex, Space, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
+import classes from './Home.module.css';
 
-const loadGameAssetWorker = new Worker(new URL("/src/workers/loadGameAsset.js", import.meta.url));
+
+const { FS } = fs;
+
+function createZipFileSystem() {
+  return new FS();
+}
+
+const apiFilesystem = createZipFileSystem();
+
+const { root } = apiFilesystem;
 
 async function parseZipFile() {
-  loadGameAssetWorker.postMessage('/src/assets/data/media_soviet.zip')
+  try {
+    const entries = await root.importHttpContent(gameData);
+    for (const entry of entries) {
+      console.log('Entry:', entry.getFullname());
+    }
+  } catch (error) {
+    console.error('Error importing zip file:', error);
+  }
+
+  // loadGameAssetWorker.postMessage(new AdmZip('/src/assets/data/media_soviet.zip'))
 }
 
 function LoadSaveGameFileInput() {
+  //https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/components/TopButtonBar.jsx
   const icon = <IconFileDownload size={18} stroke={1.5} />;
   return (
     <FileInput
@@ -25,24 +48,62 @@ function LoadSaveGameFileInput() {
 function HomeContent() {
   return (
     <Flex
-      mih={50}
-      bg="rgba(0, 0, 0, .3)"
-      gap="sm"
-      justify="center"
-      direction="column"
-      wrap="nowrap"
+      maw={400}
+      direction={{ base: 'column', sm: 'column' }}
+      gap={{ base: 'sm', sm: 'lg' }}
+      justify={{ sm: 'center' }}
+      wrap="wrap"
     >
-      <Button onClick={parseZipFile} >Load game data</Button>
-      <LoadSaveGameFileInput/>
-    </Flex>
+        <Button onClick={parseZipFile} >Load game data</Button>
+        <LoadSaveGameFileInput/>
+   </Flex>
+  );
+}
+
+function DarkLightButton() {
+  const { setColorScheme } = useMantineColorScheme();
+  const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
+
+  return (
+    <ActionIcon
+      onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
+      variant="default"
+      size={42}
+      aria-label="Toggle color scheme"
+    >
+      <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
+      <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
+    </ActionIcon>
   );
 }
 
 export function HomePage() {
+
   return (
-    <Flex h="100vh">
-      <NavigationBar />
-      <Container fluid><HomeContent /></Container>
-    </Flex>
+    <AppShell
+      header={{ height: 50 }}
+      navbar={{
+        width: 330,
+        breakpoint: 'sm',
+      }}
+      padding="md"
+    >
+      <AppShell.Header>
+        <Flex
+          gap="md"
+          justify="flex-end"
+          align="center"
+          direction="row"
+          wrap="wrap"
+        >
+          <DarkLightButton/>
+          <Space h="md" />
+        </Flex>
+      </AppShell.Header>
+
+      <AppShell.Navbar><NavigationBar /></AppShell.Navbar>
+
+      <AppShell.Main><HomeContent /></AppShell.Main>
+    </AppShell>
   );
 }

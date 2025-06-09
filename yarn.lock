@@ -1642,6 +1642,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zip.js/zip.js@npm:^2.7.59":
+  version: 2.7.62
+  resolution: "@zip.js/zip.js@npm:2.7.62"
+  checksum: 10c0/269da31f7514ccbdd8766f0b0c440edb7df53add731862c97f3b27b594182466ce62a03fa4be5ed736a5ac0cd1c5ead09d35c97e27887c8c6f6bfd477102ea8f
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:^3.0.0":
   version: 3.0.1
   resolution: "abbrev@npm:3.0.1"
@@ -4275,6 +4282,7 @@ __metadata:
     "@types/react": "npm:^19.1.3"
     "@types/react-dom": "npm:^19.1.3"
     "@vitejs/plugin-react": "npm:^4.4.1"
+    "@zip.js/zip.js": "npm:^2.7.59"
     adm-zip: "npm:^0.5.16"
     eslint: "npm:^9.26.0"
     eslint-config-mantine: "npm:^4.0.3"
