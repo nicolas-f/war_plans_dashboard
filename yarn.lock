@@ -1330,6 +1330,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mantinex/mantine-logo@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@mantinex/mantine-logo@npm:2.0.0"
+  peerDependencies:
+    "@mantine/core": ">=7.0.0"
+    "@mantine/hooks": ">=7.0.0"
+    react: ^18.x || ^19.x
+    react-dom: ^18.x || ^19.x
+  checksum: 10c0/7a8ae0812dfbd8b793941171450c937fa39b28c032567078c3a5b79b6f1e10f359bd150fd11edd5fb024fb0db4013767ec57c6aa7cbf71e81b7eb563f26c21ca
+  languageName: node
+  linkType: hard
+
 "@modelcontextprotocol/sdk@npm:^1.8.0":
   version: 1.11.0
   resolution: "@modelcontextprotocol/sdk@npm:1.11.0"
@@ -1883,6 +1895,24 @@ __metadata:
   peerDependencies:
     storybook: ^8.2.9
   checksum: 10c0/13b08829699ef95398133c7b5dd260842cca72485b905d2616202e97a6215cc24e3fb2c86499d357672437b2d7b60177ba53fd8741b00f8a0c280a32464c3295
+  languageName: node
+  linkType: hard
+
+"@tabler/icons-react@npm:^3.34.0":
+  version: 3.34.0
+  resolution: "@tabler/icons-react@npm:3.34.0"
+  dependencies:
+    "@tabler/icons": "npm:3.34.0"
+  peerDependencies:
+    react: ">= 16"
+  checksum: 10c0/b2d094c6ae02fc157d9a059e06c65b1dd49a96c7fc77a57bc9acf289899df66504bcab533e7a22d9ec3ca7c3952176c6c916e84aff827b24d2c69ecc7bfc737d
+  languageName: node
+  linkType: hard
+
+"@tabler/icons@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tabler/icons@npm:3.34.0"
+  checksum: 10c0/7b4bb937e051ece9258ab4321363f284a4c1d53fbe0211c6976bff41d0ca031e8196156595bb30fa2bfb963f1771814d1438aa01a4422df9a6e21a46ebe6cc9b
   languageName: node
   linkType: hard
 
@@ -6242,8 +6272,10 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@mantine/core": "npm:8.0.2"
     "@mantine/hooks": "npm:8.0.2"
+    "@mantinex/mantine-logo": "npm:^2.0.0"
     "@storybook/react": "npm:^8.6.12"
     "@storybook/react-vite": "npm:^8.6.12"
+    "@tabler/icons-react": "npm:^3.34.0"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/jest-dom": "npm:^6.6.3"
     "@testing-library/react": "npm:^16.3.0"
