@@ -1,35 +1,29 @@
+/*
+ * Copyright (C) 2025
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import '@mantine/core/styles.css';
 import { MantineProvider, ActionIcon, AppShell, Button, FileInput, Flex, Space,
   useComputedColorScheme, useMantineColorScheme} from '@mantine/core';
 import { IconFileDownload, IconMoon, IconSun } from '@tabler/icons-react';
-import { fs } from "@zip.js/zip.js";
-import gameData from '/src/assets/data/media_soviet.zip?url';
+import {parseZipFileFromUrl} from './features/parseGameData'
 import cx from 'clsx';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 import classes from './App.module.css';
-
-const { FS } = fs;
-
-function createZipFileSystem() {
-  return new FS();
-}
-
-const apiFilesystem = createZipFileSystem();
-
-const { root } = apiFilesystem;
-
-async function parseZipFile() {
-  try {
-    const entries = await root.importHttpContent(gameData);
-    for (const entry of entries) {
-      console.log('Entry:', entry.getFullname());
-    }
-  } catch (error) {
-    console.error('Error importing zip file:', error);
-  }
-
-  // loadGameAssetWorker.postMessage(new AdmZip('/src/assets/data/media_soviet.zip'))
-}
+import gameData from '/src/assets/data/media_soviet.zip?url';
 
 function LoadSaveGameFileInput() {
   //https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/components/TopButtonBar.jsx
@@ -46,6 +40,10 @@ function LoadSaveGameFileInput() {
   );
 }
 
+function onLoadGameData() {
+  parseZipFileFromUrl(gameData)
+}
+
 function HomeContent() {
   return (
     <Flex
@@ -55,7 +53,7 @@ function HomeContent() {
       justify={{ sm: 'center' }}
       wrap="wrap"
     >
-      <Button onClick={parseZipFile} >Load game data</Button>
+      <Button onClick={onLoadGameData} >Load game data</Button>
       <LoadSaveGameFileInput/>
     </Flex>
   );

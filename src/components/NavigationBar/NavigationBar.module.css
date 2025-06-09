@@ -73,6 +73,7 @@
     margin: auto;
     width: 100%;
     display: flex;
+    padding: 5px;
 }
 
 .logoTitle {
