@@ -6,9 +6,10 @@ import {
   IconSettings,
 
 } from '@tabler/icons-react';
-import { Group, Text } from '@mantine/core';
+import { Group, Image, Text } from '@mantine/core';
 import classes from './NavigationBar.module.css';
 import "/src/assets/fonts/SovietProgram/SovietProgram.ttf"
+import wrLogo from "/src/favicon.png"
 
 const mainLinksMockdata = [
   { link: '', icon: IconSettings, label: 'Settings' },
@@ -41,7 +42,7 @@ export function NavigationBar() {
       <div className={classes.navbarMain}>
         <Group className={classes.header} justify="space-between">
           <div className={classes.logo}>
-            <img src="/src/favicon.png" alt="logo" />
+            <Image src={wrLogo} alt="logo" />
             <div className={classes.titleContainer}>
               <div>
                 <Text className={classes.logoTitle}>Soviet Republic</Text>
