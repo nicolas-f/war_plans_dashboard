@@ -42,7 +42,13 @@ export function NavigationBar() {
         <Group className={classes.header} justify="space-between">
           <div className={classes.logo}>
             <img src="src/favicon.png" alt="logo" />
-            <Text className={classes.logoTitle}>Worder And Resources Dashboard</Text>
+            <div className={classes.titleContainer}>
+              <div>
+                <Text className={classes.logoTitle}>Soviet Republic</Text>
+                <Text className={classes.logoTitle}>Worker And Resources</Text>
+                <Text className={classes.logoTitle}>Dashboard</Text>
+              </div>
+            </div>
           </div>
         </Group>
         {mainLinks}

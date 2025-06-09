@@ -1,28 +1,25 @@
-import * as fs from 'node:fs';
-import { Button, Flex } from '@mantine/core';
-import { NavigationBar } from "@/components/NavigationBar/NavigationBar";
-// import gameData from '../data/media_soviet.zip';
+import { IconFileDownload } from '@tabler/icons-react';
+import { Button, Container, FileInput, Flex } from '@mantine/core';
+import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 
 const loadGameAssetWorker = new Worker(new URL("/src/workers/loadGameAsset.js", import.meta.url));
 
 async function parseZipFile() {
-  loadGameAssetWorker.postMessage("test")
-  //const filePath : fs.PathLike= path.resolve(__dirname, 'data/media_soviet.zip');
-  // const readStream = fs.createReadStream(gameData, { encoding: 'utf8' });
-  //
-  // try {
-  //   for await (const chunk of readStre
-  //   am) {
-  //     console.log('--- File chunk start ---');
-  //     console.log(chunk);
-  //     console.log('--- File chunk end ---');
-  //   }
-  //   console.log('Finished reading the file.');
-  // } catch (error) {
-  //   console.error(error);
-  // }
-  //   console.error(`Error reading file: ${error.message}`);
-  // }
+  loadGameAssetWorker.postMessage('/src/assets/data/media_soviet.zip')
+}
+
+function LoadSaveGameFileInput() {
+  const icon = <IconFileDownload size={18} stroke={1.5} />;
+  return (
+    <FileInput
+      rightSection={icon}
+      label="Game save file"
+      description="Will fetch prices and statistics from your save game (not uploaded)"
+      placeholder="SovietRepublic\media_soviet\save\mysave.zip"
+      rightSectionPointerEvents="none"
+      mt="md"
+    />
+  );
 }
 
 function HomeContent() {
@@ -32,20 +29,20 @@ function HomeContent() {
       bg="rgba(0, 0, 0, .3)"
       gap="sm"
       justify="center"
-      align="center"
       direction="column"
       wrap="nowrap"
     >
       <Button onClick={parseZipFile} >Load game data</Button>
+      <LoadSaveGameFileInput/>
     </Flex>
   );
 }
 
 export function HomePage() {
   return (
-    <>
+    <Flex h="100vh">
       <NavigationBar />
-      <HomeContent />
-    </>
+      <Container fluid><HomeContent /></Container>
+    </Flex>
   );
 }
