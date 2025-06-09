@@ -30,13 +30,12 @@ export async function parseZipEntries(entries: [ZipEntry]): Promise<{ [key: stri
     console.log('Entry (',entry.data?.uncompressedSize,' B):', entry.getFullname());
     if(!entry.data?.directory) {
       const fileEntry = entry as ZipFileEntry<any, any>;
-      const writableStream = new WritableStream({
-        write(chunk) {
-          console.log('Received chunk:', chunk);
+      const text = await fileEntry.getText()
+      for(const line of text.split("\n")) {
+        if(line.trim().length > 0) {
+          console.log(line);
         }
-      });
-      
-      await fileEntry.getWritable(writableStream);
+      }
       break
     }
   }
