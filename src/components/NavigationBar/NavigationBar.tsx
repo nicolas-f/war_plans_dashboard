@@ -2,17 +2,17 @@ import { useState } from 'react';
 import {
   IconBuildingFactory2,
   IconDatabase,
-  IconDeviceDesktopAnalytics,
   IconGraph,
   IconSettings,
-  IconSwitchHorizontal,
+
 } from '@tabler/icons-react';
-import { Group } from '@mantine/core';
+import { Group, Text } from '@mantine/core';
 import classes from './NavigationBar.module.css';
+import "/src/assets/fonts/SovietProgram/SovietProgram.ttf"
 
 const mainLinksMockdata = [
   { link: '', icon: IconSettings, label: 'Settings' },
-  { link: '', icon: IconDatabase, label: 'Game & Save Data' },
+  { link: '', icon: IconDatabase, label: 'Game & SaveGame Data' },
   { link: '', icon: IconBuildingFactory2, label: 'Production' },
   { link: '', icon: IconGraph, label: 'Game statistics' },
 ];
@@ -42,6 +42,7 @@ export function NavigationBar() {
         <Group className={classes.header} justify="space-between">
           <div className={classes.logo}>
             <img src="src/favicon.png" alt="logo" />
+            <Text className={classes.logoTitle}>Worder And Resources Dashboard</Text>
           </div>
         </Group>
         {mainLinks}

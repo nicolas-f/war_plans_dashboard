@@ -3,7 +3,7 @@ import { Button, Flex } from '@mantine/core';
 import { NavigationBar } from "@/components/NavigationBar/NavigationBar";
 // import gameData from '../data/media_soviet.zip';
 
-const loadGameAssetWorker = new Worker(new URL("/worker/loadGameAsset.js", import.meta.url));
+const loadGameAssetWorker = new Worker(new URL("/src/workers/loadGameAsset.js", import.meta.url));
 
 async function parseZipFile() {
   loadGameAssetWorker.postMessage("test")

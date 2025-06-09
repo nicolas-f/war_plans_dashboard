@@ -1,3 +1,4 @@
+
 .navbar {
     background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
     height: 750px;
@@ -5,6 +6,14 @@
     display: flex;
     flex-direction: column;
     border-right: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+@font-face {
+    font-family: 'SovietProgram';
+    src:local('SovietProgram'),
+    url("/src/assets/fonts/SovietProgram/SovietProgram.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
 }
 
 .wrapper {
@@ -60,14 +69,17 @@
 }
 
 .logo {
+    margin: auto;
     width: 100%;
     display: flex;
-    justify-content: center;
     height: 60px;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
-    margin-bottom: var(--mantine-spacing-xl);
+    padding: 5px;
+}
+
+.logoTitle {
+    font-family: 'SovietProgram', serif;
+    color: var(--mantine-color-red-6);
+    text-align: -webkit-center;
 }
 
 .linkIcon {
