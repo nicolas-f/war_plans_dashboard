@@ -180,7 +180,7 @@ export default function App() {
             {(() => {
               switch (activePage) {
                 case 'settings': return <SettingsPageContent />;
-                case 'gamedata': return <GameDataView gameDatabase={gameDatabase} savegameDatabase={savegameDatabase} />;
+                case 'gamedata': return <GameDataView gameDatabase={gameDatabase} saveGameDatabase={savegameDatabase} selectedLanguage={selectedLanguage} />;
                 case 'production': return <ProductionGameContent />;
                 case 'stats': return <GameStatisticsContent />;
                 default: return null;
