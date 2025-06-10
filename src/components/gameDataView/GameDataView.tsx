@@ -37,24 +37,44 @@ function chunk<T>(array: T[], size: number): T[][] {
 export function GameDataView({ gameDatabase, saveGameDatabase }: GameDataViewProps) {
   const [activePage, setPage] = useState(1);
   const data = chunk(gameDatabase.entities.entries().toArray(),
-    5
+    4
   );
 
-  const entitiesCards = data[activePage - 1].map(([key, value]) => (
+  const entitiesCards = data[activePage - 1].map(([entityKey, entityInstance]) => (
 
-    <Card withBorder shadow="sm" radius="md" key={key}>
+    <Card withBorder shadow="sm" radius="md" key={entityKey}>
       <Card.Section withBorder inheritPadding py="xs">
         <Group justify="space-between">
-          <Text fw={500}>{ gameDatabase.getLang("English", value.getLocalizedNameIndex())}</Text>
+          <Text fw={500}>{ gameDatabase.getLang("English", entityInstance.getLocalizedNameIndex())}</Text>
         </Group>
       </Card.Section>
       <Space h="md" />
-      <Table variant="vertical" layout="fixed" withTableBorder>
+      <Table variant="vertical" layout="fixed" striped highlightOnHover withTableBorder withColumnBorders>
         <Table.Tbody>
           <Table.Tr>
             <Table.Th w={160}>Type</Table.Th>
-            <Table.Td>{value.getType()}</Table.Td>
+            <Table.Td>{entityInstance.getType()}</Table.Td>
+            <Table.Td />
           </Table.Tr>
+          <Table.Tr>
+            <Table.Th w={160}>Workers needed</Table.Th>
+            <Table.Td>{entityInstance.getWorkersNeeded()}</Table.Td>
+            <Table.Td />
+          </Table.Tr>
+          {entityInstance.getProduction().map((e) => (
+            <Table.Tr>
+              <Table.Th w={160}>Production/Worker</Table.Th>
+              <Table.Td>{e.resource}</Table.Td>
+              <Table.Td>{e.quantity}</Table.Td>
+            </Table.Tr>
+          ))}
+          {entityInstance.getConsumption().map((e) => (
+            <Table.Tr>
+              <Table.Th w={160}>Consumption/Worker</Table.Th>
+              <Table.Td>{e.resource}</Table.Td>
+              <Table.Td>{e.quantity}</Table.Td>
+            </Table.Tr>
+          ))}
         </Table.Tbody>
       </Table>
     </Card>
@@ -63,11 +83,12 @@ export function GameDataView({ gameDatabase, saveGameDatabase }: GameDataViewPro
   return (
     <Stack align="center">
       <Pagination total={data.length} value={activePage} onChange={setPage} mt="sm" />
-    <Stack>
+    <Stack maw="400px">
       {entitiesCards}
     </Stack>
   </Stack>
   );
+
 }
 
 export default GameDataView;

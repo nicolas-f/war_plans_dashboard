@@ -38,27 +38,93 @@ export function extractLine(content: string, index: number) : [string, number] {
 
 /**
  * Game data entity
- * ex:
  *
- * $NAME 6356
- *
- * $TYPE_FACTORY
- *
- * $STYLE_FLAG modern_industry
  */
 export class Entity {
   name: string;
+  /**
+   * Raw game ini data
+   * ex:
+   *
+   * $NAME 6356
+   *
+   * $TYPE_FACTORY
+   *
+   * $STYLE_FLAG modern_industry
+   *
+   * $WORKERS_NEEDED 150
+   * $PRODUCTION eletronics 0.03
+   * $CONSUMPTION ecomponents 0.01
+   * $CONSUMPTION plastics	0.015
+   * $CONSUMPTION mcomponents 0.01
+   */
   data  = ""
 
   constructor(name: string) {
     this.name = name;
   }
 
+  /**
+   * Retrieves the numerical value associated with a specific attribute from the data.
+   *
+   * @param {string} attribute - The attribute name whose numerical value is to be retrieved.
+   * @return {number} The numerical value of the specified attribute. Returns 0 if the attribute is not found.
+   */
+  getNumberAttribute(attribute : string) : number {
+    const index = this.data.indexOf(attribute)
+    if(index === -1) {
+      return 0
+    } 
+    return parseInt(extractLine(this.data, index)[0].substring(attribute.length).trim(), 10)
+  }
+
+  /**
+   * Retrieves the string value associated with a specified attribute from the data.
+   *
+   * @param {string} attribute - The name of the attribute for which the value is to be retrieved.
+   * @return {string} The value of the specified attribute. Returns an empty string if the attribute is not found.
+   */
+  getStringAttribute(attribute : string) : string {
+    const index = this.data.indexOf(attribute)
+    if(index === -1) {
+      return ""
+    }
+    return extractLine(this.data, index)[0].substring(attribute.length).trim()
+  }
+
   getLocalizedNameIndex() : number {
-    return parseInt(extractLine(this.data, this.data.indexOf("$NAME"))[0].substring("$NAME".length).trim(), 10)
+    return this.getNumberAttribute("$NAME")
   }
 
   getType() : string {
-    return extractLine(this.data, this.data.indexOf("$TYPE_"))[0].substring("$TYPE_".length).trim()
+    return this.getStringAttribute("$TYPE_")
+  }
+
+  getWorkersNeeded() : number {
+    return this.getNumberAttribute("$WORKERS_NEEDED")
+  }
+
+  getProduction() {
+    let index = this.data.indexOf("$PRODUCTION ")
+    const production = []
+    while(index !== -1) {
+      const info = extractLine(this.data, index)
+      const parts = info[0].trim().split(/\s+/);
+      production.push({resource: parts[1], quantity: parseFloat(parts[2])})
+      index = this.data.indexOf("$PRODUCTION ", info[1])
+    }
+    return production
+  }
+
+  getConsumption() {
+    let index = this.data.indexOf("$CONSUMPTION ")
+    const consumption = []
+    while(index !== -1) {
+      const info = extractLine(this.data, index)
+      const parts = info[0].trim().split(/\s+/);
+      consumption.push({resource: parts[1], quantity: parseFloat(parts[2])})
+      index = this.data.indexOf("$CONSUMPTION ", info[1])
+    }
+    return consumption
   }
 }
