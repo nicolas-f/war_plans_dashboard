@@ -70,7 +70,6 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
 }
 
 export async function parseGameDataZipEntries(entries: [ZipEntry]): Promise<GameDatabase> {
-  console.debug("Parsing game data zip entries..")
   const gameDatabase = new GameDatabase()
   for (const entry of entries) {
     if(!entry.data?.directory) {
@@ -86,7 +85,6 @@ export async function parseGameDataZipEntries(entries: [ZipEntry]): Promise<Game
       }
     }
   }
-  console.debug("Zip game data entries parsed.")
   return gameDatabase
 }
 

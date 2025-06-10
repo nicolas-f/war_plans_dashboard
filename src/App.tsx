@@ -29,6 +29,7 @@ import {
   IconSun,
 } from '@tabler/icons-react';
 import gameData from '/src/assets/data/media_soviet.zip?url';
+import savegameData from '/src/assets/data/default_save.zip?url';
 import cx from 'clsx';
 import {
   ActionIcon,
@@ -44,9 +45,11 @@ import {
   useComputedColorScheme,
   useMantineColorScheme,
 } from '@mantine/core';
-import { NavigationBar, NavigationBarProps } from '@/components/NavigationBar/NavigationBar';
+import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
+import { parseSaveGameZipFileFromUrl } from '@/features/parseSaveData';
+import { SaveGameDatabase } from '@/model/saveGameDatabase';
 
 function LoadSaveGameFileInput() {
   //https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/components/TopButtonBar.jsx
@@ -109,6 +112,7 @@ function DarkLightButton() {
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [gameDatabase, setGameDatabase] = useState(new GameDatabase());
+  const [savegameDatabase, setSavegameDatabase] = useState(new SaveGameDatabase());
   const [selectedLanguage, setSelectedLanguage] = useState('English');
 
   const pages = [
@@ -135,7 +139,9 @@ export default function App() {
       try {
         setLoading(true);
         const data = await parseZipFileFromUrl(gameData);
+        const saveGameData = await parseSaveGameZipFileFromUrl(savegameData);
         setGameDatabase(data);
+        setSavegameDatabase(saveGameData);
       } finally {
         setLoading(false);
       }

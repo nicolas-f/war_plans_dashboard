@@ -19,84 +19,61 @@ import { ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
 import { createZipFileSystem } from '@/features/zipFileSystem';
 import { SaveGameDatabase } from '@/model/saveGameDatabase';
 
-/**
- * Parses the given text into lines and yields each line along with its starting position.
- * This generator function processes the input text string and identifies lines based on
- * line terminators such as '\n' (LF) or '\r' (CR). It also handles CRLF ('\r\n') line endings.
- *
- * @param {string} text The input text to be parsed into lines.
- * @param {number} [initialStart=0] The position in the text to start parsing from. Defaults to 0.
- * @return {Generator<[string, number]>} A generator that yields a tuple containing a line of text
- *                                       and its starting position in the input string.
- */
-function* parseLines(
-  text: string,
-  initialStart: number = 0
-): Generator<[string, number]> {
-  let start = initialStart;
-  const len = text.length;
+export function getLocalizedDate(year: number, dayOfYear: number): string {
+  // Create a Date object using year and day of year
+  const date = new Date(year, 0); // Start with Jan 1st
+  date.setDate(dayOfYear); // Set to nth day of year (automatically rolls over months)
 
-  while (start < len) {
-    const cr = text.indexOf('\r', start);
-    const lf = text.indexOf('\n', start);
+  // Format using browser's locale
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
 
-    // Determine the nearest line terminator
-    const end = Math.min(
-      cr === -1 ? Infinity : cr,
-      lf === -1 ? Infinity : lf
-    );
-
-    if (end === Infinity) {
-      yield [text.substring(start), start];
-      break;
-    } else {
-      const line = text.substring(start, end);
-      yield [line, start];
-
-      // Handle CRLF line endings
-      if (end === cr && text[end + 1] === '\n') {
-        start = end + 2;
-      } else {
-        start = end + 1;
-      }
-    }
+function extractLine(content: string, index: number) : [string, number] {
+  let endOfLine = content.indexOf("\r\n", index)
+  if(endOfLine === -1) {
+    endOfLine = content.length
   }
+  return [content.substring(index, endOfLine), endOfLine]
 }
 
 
+
+
+
+function fetchRecordIndex(content: string, saveGameDatabase: SaveGameDatabase, keyword: string) {
+  let recordIndex = content.indexOf(keyword)
+  while(recordIndex !== -1) {
+    const day = parseInt(extractLine("$DATE_DAY", recordIndex)[0].substring("$DATE_DAY".length).trim(), 10)
+    const year = parseInt(extractLine("$DATE_YEAR", recordIndex)[0].substring("$DATE_YEAR".length).trim(), 10)
+    const key = `${year}-${day}`
+    saveGameDatabase.dateIndex[key] = recordIndex
+    recordIndex = content.indexOf(keyword, recordIndex + 1)
+  }
+}
+
+/**
+ * stats records is in the form:
+ *
+ * $STAT_RECORD 1
+ * ====================================================================
+ * ====================================================================
+ * $DATE_DAY 3
+ * $DATE_YEAR 1960
+ *
+ * @param content
+ * @param saveGameDatabase
+ */
 function parseIniFile(content: string, saveGameDatabase: SaveGameDatabase) {
   saveGameDatabase.statistics = content
-  // create an index of the content for each statistics date using parseLines
-  let state = ""
-  let day = -1
-  let year = -1
-  let recordIndex = 0
-  for (const [line, index] of parseLines(content)) {
-    if(state === "") {
-      if(line.startsWith("$STAT_RECORD")) {
-        state = "$STAT_RECORD"
-        recordIndex = index
-      }
-    } else if(state === "$STAT_RECORD") {
-      if(line.startsWith("$DATE_DAY")) {
-        // ex $DATE_DAY 52
-        day = parseInt(line.substring("$DATE_DAY".length).trim(), 10)
-        state = "$DATE_DAY"
-      }
-    } else if(state === "$DATE_DAY") {
-      if(line.startsWith("$DATE_YEAR")) {
-        //ex $DATE_YEAR 1970
-        year = parseInt(line.substring("$DATE_YEAR".length).trim(), 10)
-        const key = `${year}-${day}`
-        saveGameDatabase.dateIndex[key] = recordIndex
-        state = ""
-      }
-    }
-  }
+  fetchRecordIndex(content, saveGameDatabase, "$STAT_RECORD")
+  fetchRecordIndex(content, saveGameDatabase, "$STAT_CURRENT")
 }
 
 export async function parseSaveGameDataZipEntries(entries: [ZipEntry]): Promise<SaveGameDatabase> {
-  console.debug("Parsing game data zip entries..")
   const saveGameDatabase = new SaveGameDatabase()
   for (const entry of entries) {
     if(!entry.data?.directory) {
@@ -107,7 +84,6 @@ export async function parseSaveGameDataZipEntries(entries: [ZipEntry]): Promise<
       }
     }
   }
-  console.debug("Zip game data entries parsed.")
   return saveGameDatabase
 }
 
