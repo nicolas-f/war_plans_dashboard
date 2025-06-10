@@ -1,3 +1,4 @@
+import { GameDatabase } from '@/model/gameDatabase';
 /*
  * Copyright (C) 2025
  *
@@ -16,14 +17,34 @@
  */
 
 import '@mantine/core/styles.css';
-import { MantineProvider, ActionIcon, AppShell, Button, FileInput, Flex, Space,
-  useComputedColorScheme, useMantineColorScheme} from '@mantine/core';
+
+
+
+import React from 'react';
 import { IconFileDownload, IconMoon, IconSun } from '@tabler/icons-react';
-import {parseZipFileFromUrl} from './features/parseGameData'
-import cx from 'clsx';
-import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
-import classes from './App.module.css';
 import gameData from '/src/assets/data/media_soviet.zip?url';
+import cx from 'clsx';
+import { ActionIcon, AppShell, Box, FileInput, Flex, LoadingOverlay, MantineProvider, Notification, Space, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
+import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
+import { parseZipFileFromUrl } from './features/parseGameData';
+import classes from './App.module.css';
+import { useDisclosure } from '@mantine/hooks';
+
+
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function LoadSaveGameFileInput() {
   //https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/components/TopButtonBar.jsx
@@ -40,10 +61,6 @@ function LoadSaveGameFileInput() {
   );
 }
 
-function onLoadGameData() {
-  parseZipFileFromUrl(gameData)
-}
-
 function HomeContent() {
   return (
     <Flex
@@ -53,7 +70,6 @@ function HomeContent() {
       justify={{ sm: 'center' }}
       wrap="wrap"
     >
-      <Button onClick={onLoadGameData} >Load game data</Button>
       <LoadSaveGameFileInput/>
     </Flex>
   );
@@ -107,10 +123,36 @@ export function HomePage() {
   );
 }
 
+function LoadingNotification() {
+  return (
+    <Notification classNames={{ loader: classes.loader }} title="Please wait">
+      Loading game data comrade !
+    </Notification>
+  );
+}
+
 export default function App() {
+  const [databaseLoaded, { toggle }] = useDisclosure(false);
+  const [gameDatabase, setGameDatabase] = React.useState(new GameDatabase());
+
+  React.useEffect(() => {
+    const loadDatabase = async () => {
+      try {
+        const data = await parseZipFileFromUrl(gameData);
+        setGameDatabase(data);
+      } finally {
+        toggle()
+      }
+    };
+    loadDatabase()
+  }, []);
+
   return (
     <MantineProvider defaultColorScheme="dark">
-      <HomePage />
+      <Box pos="relative">
+        <LoadingOverlay visible={databaseLoaded} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }}/>
+        <HomePage />
+      </Box>
     </MantineProvider>
   );
 }

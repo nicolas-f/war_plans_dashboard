@@ -20,25 +20,12 @@ import { fs, ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
 import { Entity } from '@/model/entity';
 import { GameDatabase } from '@/model/gameDatabase';
 
-
-;
-
-
-
-
-
-
 const { FS } = fs;
+const typePrepend = "$TYPE_";
 
-// https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/ZipManager.jsx
-
-// https://github.com/gildas-lormeau/zip.js/blob/master/tests/all/test-fs-text.js
 function createZipFileSystem() {
   return new FS();
 }
-
-
-const typePrepend = "$TYPE_";
 
 function parseEntity(entity : Entity, lines : string[]) {
   for(const line of lines) {
@@ -108,11 +95,6 @@ export async function parseZipEntries(entries: [ZipEntry]): Promise<GameDatabase
 export async function parseZipFileFromUrl(url : string) {
   const apiFilesystem = createZipFileSystem();
   const { root } = apiFilesystem;
-
-  try {
-    const entries = await root.importHttpContent(url);
-    return parseZipEntries(entries)
-  } catch (error) {
-    console.error('Error importing zip file:', error);
-  }
+  const entries = await root.importHttpContent(url);
+  return parseZipEntries(entries)
 }
