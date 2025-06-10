@@ -18,33 +18,35 @@ import { GameDatabase } from '@/model/gameDatabase';
 
 import '@mantine/core/styles.css';
 
-
-
-import React from 'react';
-import { IconFileDownload, IconMoon, IconSun } from '@tabler/icons-react';
+import React, { useState } from 'react';
+import {
+  IconBuildingFactory2,
+  IconDatabase,
+  IconFileDownload,
+  IconGraph,
+  IconMoon,
+  IconSettings,
+  IconSun,
+} from '@tabler/icons-react';
 import gameData from '/src/assets/data/media_soviet.zip?url';
 import cx from 'clsx';
-import { ActionIcon, AppShell, Box, FileInput, Flex, LoadingOverlay, MantineProvider, Notification, Space, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
-import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
+import {
+  ActionIcon,
+  AppShell,
+  Box,
+  FileInput,
+  Flex,
+  LoadingOverlay,
+  MantineProvider,
+  Notification,
+  Space,
+  Textarea,
+  useComputedColorScheme,
+  useMantineColorScheme,
+} from '@mantine/core';
+import { NavigationBar, NavigationBarProps } from '@/components/NavigationBar/NavigationBar';
 import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
-import { useDisclosure } from '@mantine/hooks';
-
-
-;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function LoadSaveGameFileInput() {
   //https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/components/TopButtonBar.jsx
@@ -61,7 +63,7 @@ function LoadSaveGameFileInput() {
   );
 }
 
-function HomeContent() {
+function SettingsPageContent() {
   return (
     <Flex
       maw={400}
@@ -70,9 +72,21 @@ function HomeContent() {
       justify={{ sm: 'center' }}
       wrap="wrap"
     >
-      <LoadSaveGameFileInput/>
+      <LoadSaveGameFileInput />
     </Flex>
   );
+}
+
+function GameDataPageContent() {
+  return <Notification title="We notify you that">Game data page content</Notification>;
+}
+
+function ProductionGameContent() {
+  return <Notification title="We notify you that">Production data page content</Notification>;
+}
+
+function GameStatisticsContent() {
+  return <Notification title="We notify you that">Game statistics page content</Notification>;
 }
 
 function DarkLightButton() {
@@ -92,66 +106,73 @@ function DarkLightButton() {
   );
 }
 
-export function HomePage() {
-
-  return (
-    <AppShell
-      header={{ height: 50 }}
-      navbar={{
-        width: 330,
-        breakpoint: 'sm',
-      }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Flex
-          gap="md"
-          justify="flex-end"
-          align="center"
-          direction="row"
-          wrap="wrap"
-        >
-          <DarkLightButton/>
-          <Space h="md" />
-        </Flex>
-      </AppShell.Header>
-
-      <AppShell.Navbar><NavigationBar /></AppShell.Navbar>
-
-      <AppShell.Main><HomeContent /></AppShell.Main>
-    </AppShell>
-  );
-}
-
-function LoadingNotification() {
-  return (
-    <Notification classNames={{ loader: classes.loader }} title="Please wait">
-      Loading game data comrade !
-    </Notification>
-  );
-}
-
 export default function App() {
-  const [databaseLoaded, { toggle }] = useDisclosure(false);
-  const [gameDatabase, setGameDatabase] = React.useState(new GameDatabase());
+  const [loading, setLoading] = useState(true);
+  const [gameDatabase, setGameDatabase] = useState(new GameDatabase());
+  const pages = [
+    { id: 'settings', link: SettingsPageContent, icon: IconSettings, label: 'Settings' },
+    {
+      id: 'gamedata',
+      link: GameDataPageContent,
+      icon: IconDatabase,
+      label: 'Game & SaveGame Data',
+    },
+    {
+      id: 'production',
+      link: ProductionGameContent,
+      icon: IconBuildingFactory2,
+      label: 'Production',
+    },
+    { id: 'stats', link: GameStatisticsContent, icon: IconGraph, label: 'Game statistics' },
+  ];
+
+  const [activePage, setActivePage] = useState(pages[0].id);
 
   React.useEffect(() => {
     const loadDatabase = async () => {
       try {
+        setLoading(true);
         const data = await parseZipFileFromUrl(gameData);
         setGameDatabase(data);
       } finally {
-        toggle()
+        setLoading(false);
       }
     };
-    loadDatabase()
+    loadDatabase();
   }, []);
+
+  const renderContent = () => {
+    for (const page of pages) {
+      if (page.id === activePage) {
+        return page.link();
+      }
+    }
+    return null;
+  };
 
   return (
     <MantineProvider defaultColorScheme="dark">
       <Box pos="relative">
-        <LoadingOverlay visible={databaseLoaded} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }}/>
-        <HomePage />
+        <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
+        <AppShell
+          header={{ height: 50 }}
+          navbar={{
+            width: 330,
+            breakpoint: 'sm',
+          }}
+          padding="md"
+        >
+          <AppShell.Header>
+            <Flex gap="md" justify="flex-end" align="center" direction="row" wrap="wrap">
+              <DarkLightButton />
+              <Space h="md" />
+            </Flex>
+          </AppShell.Header>
+          <AppShell.Navbar>
+            <NavigationBar defaultId={activePage} links={pages} onActiveChange={setActivePage} />
+          </AppShell.Navbar>
+          <AppShell.Main>{renderContent()}</AppShell.Main>
+        </AppShell>
       </Box>
     </MantineProvider>
   );

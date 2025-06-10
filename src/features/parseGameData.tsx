@@ -56,7 +56,6 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
   const entrySize = 10
   const dataView = new DataView(data.buffer, 0)
   const nbRecords = dataView.getUint32(0, false)
-  console.log("%s %d records", name, nbRecords);
   for (let index = 0; index < nbRecords; index++) {
     const entryIndex = headerSize + index * entrySize
     const id = dataView.getUint32(entryIndex, false)
@@ -69,11 +68,11 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
     }
     const text = textDecoder.decode(stringData);
     db.translations[name][id] = text;
-    console.log(text)
   }
 }
 
 export async function parseZipEntries(entries: [ZipEntry]): Promise<GameDatabase> {
+  console.debug("Parsing zip entries..")
   const gameDatabase = new GameDatabase()
   for (const entry of entries) {
     if(!entry.data?.directory) {
@@ -85,10 +84,10 @@ export async function parseZipEntries(entries: [ZipEntry]): Promise<GameDatabase
       } else if(extension === "btf" && entry.name === "sovietFrench.btf") {
         const uint8Array = await fileEntry.getUint8Array()
         parseTranslationFile(entry.getFullname(), uint8Array, gameDatabase)
-        break
       }
     }
   }
+  console.debug("Zip entries parsed.")
   return gameDatabase
 }
 

@@ -16,37 +16,37 @@
  */
 
 import { useState } from 'react';
-import {
-  IconBuildingFactory2,
-  IconDatabase,
-  IconGraph,
-  IconSettings,
-
-} from '@tabler/icons-react';
+import { Icon } from '@tabler/icons-react';
 import { Group, Image, Text } from '@mantine/core';
 import classes from './NavigationBar.module.css';
-import "/src/assets/fonts/SovietProgram/SovietProgram.ttf"
-import wrLogo from "/src/favicon.png"
 
-const mainLinksMockdata = [
-  { link: '', icon: IconSettings, label: 'Settings' },
-  { link: '', icon: IconDatabase, label: 'Game & SaveGame Data' },
-  { link: '', icon: IconBuildingFactory2, label: 'Production' },
-  { link: '', icon: IconGraph, label: 'Game statistics' },
-];
+import '/src/assets/fonts/SovietProgram/SovietProgram.ttf';
 
-export function NavigationBar() {
-  const [active, setActive] = useState('Settings');
+import wrLogo from '/src/favicon.png';
 
-  const mainLinks = mainLinksMockdata.map((item) => (
+export interface NavigationBarProps {
+  defaultId: string
+  onActiveChange?: (activeLabel: string) => void;
+  links: {
+    id: string;
+    icon: Icon;
+    label: string;
+  }[];
+}
+
+export function NavigationBar({ defaultId, onActiveChange, links }: NavigationBarProps) {
+  const [active, setActive] = useState(defaultId);
+
+  const mainLinks = links.map((item) => (
     <a
       className={classes.link}
-      data-active={item.label === active || undefined}
-      href={item.link}
+      data-active={item.id === active || undefined}
       key={item.label}
+      href=""
       onClick={(event) => {
         event.preventDefault();
-        setActive(item.label);
+        setActive(item.id);
+        onActiveChange?.(item.id);
       }}
     >
       <item.icon className={classes.linkIcon} stroke={1.5} />
