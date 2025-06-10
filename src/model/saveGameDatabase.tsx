@@ -15,10 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Entity } from '@/model/entity';
+export class SaveGameDatabase {
+  /**
+   * Full content of the statistics.ini file (large)
+   */
+  statistics = ""
+  /**
+   * byte index for all dates in statistics string
+   */
+  dateIndex : {[key : string] : number} = { }
 
-
-export class GameDatabase {
-  entities: { [key: string]: Entity } = { };
-  translations: { [key: string]: {[key: number] : string} } = { };
 }

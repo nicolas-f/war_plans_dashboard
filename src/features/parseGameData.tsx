@@ -56,6 +56,9 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
   const entrySize = 10
   const dataView = new DataView(data.buffer, 0)
   const nbRecords = dataView.getUint32(0, false)
+  if (!db.translations[name]) {
+    db.translations[name] = {};
+  }
   for (let index = 0; index < nbRecords; index++) {
     const entryIndex = headerSize + index * entrySize
     const id = dataView.getUint32(entryIndex, false)
@@ -63,9 +66,6 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
     const length = dataView.getUint16(entryIndex + 8, false);
     const stringLocation = headerSize + entrySize * nbRecords + location * 2
     const stringData = data.slice(stringLocation, stringLocation + 2 * length);
-    if (!db.translations[name]) {
-      db.translations[name] = {};
-    }
     const text = textDecoder.decode(stringData);
     db.translations[name][id] = text;
   }
@@ -81,9 +81,10 @@ export async function parseZipEntries(entries: [ZipEntry]): Promise<GameDatabase
       if(extension === "ini") {
         const text = await fileEntry.getText()
         parseIniFile(entry.getFullname(), text.split("\r\n"), gameDatabase)
-      } else if(extension === "btf" && entry.name === "sovietFrench.btf") {
+      } else if(extension === "btf" && entry.name.startsWith("soviet")) {
         const uint8Array = await fileEntry.getUint8Array()
-        parseTranslationFile(entry.getFullname(), uint8Array, gameDatabase)
+        const languageKey = entry.name.substring("soviet".length, entry.name.lastIndexOf("."))
+        parseTranslationFile(languageKey, uint8Array, gameDatabase)
       }
     }
   }

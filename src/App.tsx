@@ -37,7 +37,7 @@ import {
   FileInput,
   Flex,
   LoadingOverlay,
-  MantineProvider,
+  MantineProvider, NativeSelect,
   Notification,
   Space,
   Textarea,
@@ -109,6 +109,8 @@ function DarkLightButton() {
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [gameDatabase, setGameDatabase] = useState(new GameDatabase());
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+
   const pages = [
     { id: 'settings', link: SettingsPageContent, icon: IconSettings, label: 'Settings' },
     {
@@ -162,8 +164,14 @@ export default function App() {
           }}
           padding="md"
         >
-          <AppShell.Header>
+            <AppShell.Header>
             <Flex gap="md" justify="flex-end" align="center" direction="row" wrap="wrap">
+              <Box w={180}>
+                <NativeSelect
+                  value={selectedLanguage}
+                  onChange={(event) => setSelectedLanguage(event.currentTarget.value)}
+                  data={Object.keys(gameDatabase.translations)} />
+              </Box>
               <DarkLightButton />
               <Space h="md" />
             </Flex>
