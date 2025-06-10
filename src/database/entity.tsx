@@ -15,13 +15,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+export function getLocalizedDate(year: number, dayOfYear: number): string {
+  // Create a Date object using year and day of year
+  const date = new Date(year, 0); // Start with Jan 1st
+  date.setDate(dayOfYear); // Set to nth day of year (automatically rolls over months)
+
+  // Format using browser's locale
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+export function extractLine(content: string, index: number) : [string, number] {
+  let endOfLine = content.indexOf("\r\n", index)
+  if(endOfLine === -1) {
+    endOfLine = content.length
+  }
+  return [content.substring(index, endOfLine), endOfLine]
+}
+
 export class Entity {
   name: string;
-  entityType: string;
-  attributes : string[] = []
+  data  = ""
 
-  constructor(name: string, entityType: string) {
+  constructor(name: string) {
     this.name = name;
-    this.entityType = entityType;
   }
+
 }

@@ -1,4 +1,4 @@
-import { GameDatabase } from '@/model/gameDatabase';
+import { GameDatabase } from '@/database/gameDatabase';
 /*
  * Copyright (C) 2025
  *
@@ -41,7 +41,6 @@ import {
   MantineProvider, NativeSelect,
   Notification,
   Space,
-  Textarea,
   useComputedColorScheme,
   useMantineColorScheme,
 } from '@mantine/core';
@@ -49,7 +48,8 @@ import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
 import { parseSaveGameZipFileFromUrl } from '@/features/parseSaveData';
-import { SaveGameDatabase } from '@/model/saveGameDatabase';
+import { SaveGameDatabase } from '@/database/saveGameDatabase';
+import GameDataView from '@/components/gameDataView/GameDataView';
 
 function LoadSaveGameFileInput() {
   //https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/components/TopButtonBar.jsx
@@ -78,10 +78,6 @@ function SettingsPageContent() {
       <LoadSaveGameFileInput />
     </Flex>
   );
-}
-
-function GameDataPageContent() {
-  return <Notification title="We notify you that">Game data page content</Notification>;
 }
 
 function ProductionGameContent() {
@@ -116,20 +112,24 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] = useState('English');
 
   const pages = [
-    { id: 'settings', link: SettingsPageContent, icon: IconSettings, label: 'Settings' },
+    { id: 'settings',
+      icon: IconSettings,
+      label: 'Settings'
+    },
     {
       id: 'gamedata',
-      link: GameDataPageContent,
       icon: IconDatabase,
       label: 'Game & SaveGame Data',
     },
     {
       id: 'production',
-      link: ProductionGameContent,
       icon: IconBuildingFactory2,
       label: 'Production',
     },
-    { id: 'stats', link: GameStatisticsContent, icon: IconGraph, label: 'Game statistics' },
+    { id: 'stats',
+      icon: IconGraph,
+      label: 'Game statistics'
+    },
   ];
 
   const [activePage, setActivePage] = useState(pages[0].id);
@@ -148,15 +148,6 @@ export default function App() {
     };
     loadDatabase();
   }, []);
-
-  const renderContent = () => {
-    for (const page of pages) {
-      if (page.id === activePage) {
-        return page.link();
-      }
-    }
-    return null;
-  };
 
   return (
     <MantineProvider defaultColorScheme="dark">
@@ -185,7 +176,17 @@ export default function App() {
           <AppShell.Navbar>
             <NavigationBar defaultId={activePage} links={pages} onActiveChange={setActivePage} />
           </AppShell.Navbar>
-          <AppShell.Main>{renderContent()}</AppShell.Main>
+          <AppShell.Main>
+            {(() => {
+              switch (activePage) {
+                case 'settings': return <SettingsPageContent />;
+                case 'gamedata': return <GameDataView gameDatabase={gameDatabase} savegameDatabase={savegameDatabase} />;
+                case 'production': return <ProductionGameContent />;
+                case 'stats': return <GameStatisticsContent />;
+                default: return null;
+              }
+            })()}
+          </AppShell.Main>
         </AppShell>
       </Box>
     </MantineProvider>

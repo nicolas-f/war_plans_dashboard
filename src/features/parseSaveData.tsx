@@ -17,32 +17,8 @@
 
 import { ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
 import { createZipFileSystem } from '@/features/zipFileSystem';
-import { SaveGameDatabase } from '@/model/saveGameDatabase';
-
-export function getLocalizedDate(year: number, dayOfYear: number): string {
-  // Create a Date object using year and day of year
-  const date = new Date(year, 0); // Start with Jan 1st
-  date.setDate(dayOfYear); // Set to nth day of year (automatically rolls over months)
-
-  // Format using browser's locale
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
-
-function extractLine(content: string, index: number) : [string, number] {
-  let endOfLine = content.indexOf("\r\n", index)
-  if(endOfLine === -1) {
-    endOfLine = content.length
-  }
-  return [content.substring(index, endOfLine), endOfLine]
-}
-
-
-
-
+import { SaveGameDatabase } from '@/database/saveGameDatabase';
+import { extractLine } from '@/database/entity';
 
 function fetchRecordIndex(content: string, saveGameDatabase: SaveGameDatabase, keyword: string) {
   let recordIndex = content.indexOf(keyword)

@@ -19,43 +19,32 @@ import { createZipFileSystem } from '@/features/zipFileSystem';
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
-import { Entity } from '@/model/entity';
-import { GameDatabase } from '@/model/gameDatabase';
+import { Entity } from '@/database/entity';
+import { GameDatabase } from '@/database/gameDatabase';
 
-const typePrepend = "$TYPE_";
-
-
-function parseEntity(entity : Entity, lines : string[]) {
-  for(const line of lines) {
-    const trimmedLine = line.trim()
-    if(trimmedLine.length > 0) {
-      entity.attributes.push(trimmedLine)
-    }
-  }
+function parseIniFile(name : string, data : string, db : GameDatabase) {
+  const entity = new Entity(name)
+  entity.data = data
+  db.entities.set(name, entity)
 }
 
-function parseIniFile(name : string, lines : string[], db : GameDatabase) {
-  let index = 0
-  for(const line of lines) {
-    if(line.trim().startsWith(typePrepend)) {
-      const entity = new Entity(name, line.substring(typePrepend.length))
-      parseEntity(entity, lines.slice(index))
-      db.entities[name] = entity
-      //console.log(db[name]);
-      break
-    }
-    index += 1
-  }
-}
-
+/**
+ * Parses a translation file and populates the translations into the provided game database.
+ *
+ * Thanks to https://github.com/Nargon/BTFTool for the retro-engineering work
+ *
+ * @param {string} name - The name of the translation file.
+ * @param {Uint8Array} data - The binary data of the translation file.
+ * @param {GameDatabase} db - The game database object that stores the parsed translations.
+ */
 function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabase) {
   const textDecoder = new TextDecoder('UTF-16BE', { fatal: true });
   const headerSize = 12
   const entrySize = 10
   const dataView = new DataView(data.buffer, 0)
   const nbRecords = dataView.getUint32(0, false)
-  if (!db.translations[name]) {
-    db.translations[name] = {};
+  if (!db.translations.has(name)) {
+    db.translations.set(name, new Map<number, string>());
   }
   for (let index = 0; index < nbRecords; index++) {
     const entryIndex = headerSize + index * entrySize
@@ -65,7 +54,7 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
     const stringLocation = headerSize + entrySize * nbRecords + location * 2
     const stringData = data.slice(stringLocation, stringLocation + 2 * length);
     const text = textDecoder.decode(stringData);
-    db.translations[name][id] = text;
+    db.translations.get(name)!.set(id, text);
   }
 }
 
@@ -77,7 +66,7 @@ export async function parseGameDataZipEntries(entries: [ZipEntry]): Promise<Game
       const extension = entry.name.substring(entry.name.lastIndexOf(".") + 1)
       if(extension === "ini") {
         const text = await fileEntry.getText()
-        parseIniFile(entry.getFullname(), text.split("\r\n"), gameDatabase)
+        parseIniFile(entry.getFullname(), text, gameDatabase)
       } else if(extension === "btf" && entry.name.startsWith("soviet")) {
         const uint8Array = await fileEntry.getUint8Array()
         const languageKey = entry.name.substring("soviet".length, entry.name.lastIndexOf("."))

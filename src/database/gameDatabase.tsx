@@ -15,10 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Entity } from '@/model/entity';
+import { Entity } from '@/database/entity';
 
 
 export class GameDatabase {
-  entities: { [key: string]: Entity } = { };
-  translations: { [key: string]: {[key: number] : string} } = { };
+  entities: Map<string, Entity> = new Map<string, Entity>();
+  translations: Map<string, Map<number, string>> = new Map<string, Map<number, string>>()
 }
