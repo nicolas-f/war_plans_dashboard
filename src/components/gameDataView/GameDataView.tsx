@@ -45,7 +45,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase }: GameDataViewPro
     <Card withBorder shadow="sm" radius="md" key={key}>
       <Card.Section withBorder inheritPadding py="xs">
         <Group justify="space-between">
-          <Text fw={500}>{key}</Text>
+          <Text fw={500}>{ gameDatabase.getLang("English", value.getLocalizedNameIndex())}</Text>
         </Group>
       </Card.Section>
       <Space h="md" />
@@ -53,27 +53,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase }: GameDataViewPro
         <Table.Tbody>
           <Table.Tr>
             <Table.Th w={160}>Type</Table.Th>
-            <Table.Td>{value.data}</Table.Td>
-          </Table.Tr>
-
-          <Table.Tr>
-            <Table.Th>Status</Table.Th>
-            <Table.Td>Open</Table.Td>
-          </Table.Tr>
-
-          <Table.Tr>
-            <Table.Th>Total issues</Table.Th>
-            <Table.Td>135</Table.Td>
-          </Table.Tr>
-
-          <Table.Tr>
-            <Table.Th>Total story points</Table.Th>
-            <Table.Td>874</Table.Td>
-          </Table.Tr>
-
-          <Table.Tr>
-            <Table.Th>Last updated at</Table.Th>
-            <Table.Td>September 26, 2024 17:41:26</Table.Td>
+            <Table.Td>{value.getType()}</Table.Td>
           </Table.Tr>
         </Table.Tbody>
       </Table>

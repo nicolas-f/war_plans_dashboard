@@ -21,4 +21,12 @@ import { Entity } from '@/database/entity';
 export class GameDatabase {
   entities: Map<string, Entity> = new Map<string, Entity>();
   translations: Map<string, Map<number, string>> = new Map<string, Map<number, string>>()
+
+  getLang(language : string, key : number) : string {
+    const lang = this.translations.get(language)?.get(key)
+    if(lang) {
+      return lang
+    }
+    return key.toString()
+  }
 }

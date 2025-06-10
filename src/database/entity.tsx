@@ -36,6 +36,16 @@ export function extractLine(content: string, index: number) : [string, number] {
   return [content.substring(index, endOfLine), endOfLine]
 }
 
+/**
+ * Game data entity
+ * ex:
+ *
+ * $NAME 6356
+ *
+ * $TYPE_FACTORY
+ *
+ * $STYLE_FLAG modern_industry
+ */
 export class Entity {
   name: string;
   data  = ""
@@ -44,4 +54,11 @@ export class Entity {
     this.name = name;
   }
 
+  getLocalizedNameIndex() : number {
+    return parseInt(extractLine(this.data, this.data.indexOf("$NAME"))[0].substring("$NAME".length).trim(), 10)
+  }
+
+  getType() : string {
+    return extractLine(this.data, this.data.indexOf("$TYPE_"))[0].substring("$TYPE_".length).trim()
+  }
 }

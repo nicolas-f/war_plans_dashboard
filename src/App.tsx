@@ -167,7 +167,7 @@ export default function App() {
                 <NativeSelect
                   value={selectedLanguage}
                   onChange={(event) => setSelectedLanguage(event.currentTarget.value)}
-                  data={Object.keys(gameDatabase.translations)} />
+                  data={gameDatabase.translations.keys().toArray()} />
               </Box>
               <DarkLightButton />
               <Space h="md" />
