@@ -1,3 +1,5 @@
+;
+
 /*
  * Copyright (C) 2025
  *
@@ -15,6 +17,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { fs, ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
+import { Entity } from '@/model/entity';
+import { GameDatabase } from '@/model/gameDatabase';
+
+
+;
+
+
+
+
+
+
 const { FS } = fs;
 
 // https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/ZipManager.jsx
@@ -24,22 +37,77 @@ function createZipFileSystem() {
   return new FS();
 }
 
-export async function parseZipEntries(entries: [ZipEntry]): Promise<{ [key: string]: [] }> {
-  const retData = {}
-  for (const entry of entries) {
-    console.log('Entry (',entry.data?.uncompressedSize,' B):', entry.getFullname());
-    if(!entry.data?.directory) {
-      const fileEntry = entry as ZipFileEntry<any, any>;
-      const text = await fileEntry.getText()
-      for(const line of text.split("\n")) {
-        if(line.trim().length > 0) {
-          console.log(line);
-        }
-      }
-      break
+
+const typePrepend = "$TYPE_";
+
+function parseEntity(entity : Entity, lines : string[]) {
+  for(const line of lines) {
+    const trimmedLine = line.trim()
+    if(trimmedLine.length > 0) {
+      entity.attributes.push(trimmedLine)
     }
   }
-  return retData
+}
+
+function parseIniFile(name : string, lines : string[], db : GameDatabase) {
+  let index = 0
+  for(const line of lines) {
+    if(line.trim().startsWith(typePrepend)) {
+      const entity = new Entity(name, line.substring(typePrepend.length))
+      parseEntity(entity, lines.slice(index))
+      db.entities[name] = entity
+      //console.log(db[name]);
+      break
+    }
+    index += 1
+  }
+}
+
+function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabase) {
+  const textDecoder = new TextDecoder('cp1252');
+  const headerSize = 12
+  const entrySize = 10
+  const dataView = new DataView(data.buffer, 0)
+  const nbRecords = dataView.getUint32(0, false)
+  console.log("%s %d records", name, nbRecords);
+  for (let index = 0; index < nbRecords; index++) {
+    const entryIndex = headerSize + index * entrySize
+    const id = dataView.getUint32(entryIndex, false)
+    const location = dataView.getUint32(entryIndex + 4, false)
+    const length = dataView.getUint16(entryIndex + 8, false);
+    const stringLocation = headerSize + entrySize * nbRecords + location * 2 + 1
+    const stringData = data.slice(stringLocation, stringLocation + 2 * length);
+    const filteredData = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      filteredData[i] = stringData[i * 2];
+    }
+
+    if (!db.translations[name]) {
+      db.translations[name] = {};
+    }
+    const text = textDecoder.decode(filteredData);
+    db.translations[name][id] = text;
+    console.log(text)
+  }
+}
+
+export async function parseZipEntries(entries: [ZipEntry]): Promise<GameDatabase> {
+  const gameDatabase = new GameDatabase()
+  for (const entry of entries) {
+    if(!entry.data?.directory) {
+      const fileEntry = entry as ZipFileEntry<any, any>;
+      const extension = entry.name.substring(entry.name.lastIndexOf(".") + 1)
+      if(extension === "ini") {
+        const text = await fileEntry.getText()
+        parseIniFile(entry.getFullname(), text.split("\r\n"), gameDatabase)
+      } else if(extension === "btf" && entry.name === "sovietFrench.btf") {
+        const uint8Array = await fileEntry.getUint8Array()
+        parseTranslationFile(entry.getFullname(), uint8Array, gameDatabase)
+        break
+      }
+    }
+  }
+  return gameDatabase
 }
 
 export async function parseZipFileFromUrl(url : string) {
