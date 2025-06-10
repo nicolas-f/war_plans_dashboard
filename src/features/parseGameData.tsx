@@ -64,7 +64,7 @@ function parseIniFile(name : string, lines : string[], db : GameDatabase) {
 }
 
 function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabase) {
-  const textDecoder = new TextDecoder('cp1252');
+  const textDecoder = new TextDecoder('UTF-16BE', { fatal: true });
   const headerSize = 12
   const entrySize = 10
   const dataView = new DataView(data.buffer, 0)
@@ -75,17 +75,12 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
     const id = dataView.getUint32(entryIndex, false)
     const location = dataView.getUint32(entryIndex + 4, false)
     const length = dataView.getUint16(entryIndex + 8, false);
-    const stringLocation = headerSize + entrySize * nbRecords + location * 2 + 1
+    const stringLocation = headerSize + entrySize * nbRecords + location * 2
     const stringData = data.slice(stringLocation, stringLocation + 2 * length);
-    const filteredData = new Uint8Array(length);
-    for (let i = 0; i < length; i++) {
-      filteredData[i] = stringData[i * 2];
-    }
-
     if (!db.translations[name]) {
       db.translations[name] = {};
     }
-    const text = textDecoder.decode(filteredData);
+    const text = textDecoder.decode(stringData);
     db.translations[name][id] = text;
     console.log(text)
   }
