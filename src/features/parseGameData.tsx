@@ -1,3 +1,5 @@
+import { createZipFileSystem } from '@/features/zipFileSystem';
+
 ;
 
 /*
@@ -16,16 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { fs, ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
+import { ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
 import { Entity } from '@/model/entity';
 import { GameDatabase } from '@/model/gameDatabase';
 
-const { FS } = fs;
 const typePrepend = "$TYPE_";
 
-function createZipFileSystem() {
-  return new FS();
-}
 
 function parseEntity(entity : Entity, lines : string[]) {
   for(const line of lines) {
@@ -71,8 +69,8 @@ function parseTranslationFile(name : string, data : Uint8Array, db : GameDatabas
   }
 }
 
-export async function parseZipEntries(entries: [ZipEntry]): Promise<GameDatabase> {
-  console.debug("Parsing zip entries..")
+export async function parseGameDataZipEntries(entries: [ZipEntry]): Promise<GameDatabase> {
+  console.debug("Parsing game data zip entries..")
   const gameDatabase = new GameDatabase()
   for (const entry of entries) {
     if(!entry.data?.directory) {
@@ -88,7 +86,7 @@ export async function parseZipEntries(entries: [ZipEntry]): Promise<GameDatabase
       }
     }
   }
-  console.debug("Zip entries parsed.")
+  console.debug("Zip game data entries parsed.")
   return gameDatabase
 }
 
@@ -96,5 +94,5 @@ export async function parseZipFileFromUrl(url : string) {
   const apiFilesystem = createZipFileSystem();
   const { root } = apiFilesystem;
   const entries = await root.importHttpContent(url);
-  return parseZipEntries(entries)
+  return parseGameDataZipEntries(entries)
 }
