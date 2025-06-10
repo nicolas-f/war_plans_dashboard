@@ -57,9 +57,8 @@ export function NavigationBar({ defaultId, onActiveChange, links }: NavigationBa
   return (
     <nav className={classes.navbar}>
       <div className={classes.navbarMain}>
-        <Group className={classes.header} justify="space-between">
-          <div className={classes.logo}>
-            <Image src={wrLogo} alt="logo" />
+          <div className={classes.logoDiv}>
+            <Image src={wrLogo} alt="logo" className={classes.logo}/>
             <div className={classes.titleContainer}>
               <div>
                 <Text className={classes.logoTitle}>Soviet Republic</Text>
@@ -68,7 +67,6 @@ export function NavigationBar({ defaultId, onActiveChange, links }: NavigationBa
               </div>
             </div>
           </div>
-        </Group>
         {mainLinks}
       </div>
 
