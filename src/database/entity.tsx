@@ -100,31 +100,49 @@ export class Entity {
     return this.getStringAttribute("$TYPE_")
   }
 
-  getWorkersNeeded() : number {
+  getMaximumWorkers() : number {
     return this.getNumberAttribute("$WORKERS_NEEDED")
   }
 
-  getProduction() {
-    let index = this.data.indexOf("$PRODUCTION ")
-    const production = []
+  private getResourceData(prefix: string) {
+    let index = this.data.indexOf(prefix)
+    const resources = []
     while(index !== -1) {
       const info = extractLine(this.data, index)
       const parts = info[0].trim().split(/\s+/);
-      production.push({resource: parts[1], quantity: parseFloat(parts[2])})
-      index = this.data.indexOf("$PRODUCTION ", info[1])
+      if(parts.length >= 3) {
+        resources.push({resource: parts[1], quantity: parseFloat(parts[2])})
+      } else if(parts.length === 2){
+        resources.push({resource: parts[0].substring(prefix.length + 1), quantity: parseFloat(parts[1])})
+      }
+      index = this.data.indexOf(prefix, info[1])
     }
-    return production
+    return resources
+  }
+
+  getProduction() {
+    return this.getResourceData("$PRODUCTION")
   }
 
   getConsumption() {
-    let index = this.data.indexOf("$CONSUMPTION ")
-    const consumption = []
-    while(index !== -1) {
-      const info = extractLine(this.data, index)
-      const parts = info[0].trim().split(/\s+/);
-      consumption.push({resource: parts[1], quantity: parseFloat(parts[2])})
-      index = this.data.indexOf("$CONSUMPTION ", info[1])
-    }
-    return consumption
+    return this.getResourceData("$CONSUMPTION")
   }
+
+  getMaximumProduction() {
+    const maxWorkers = this.getMaximumWorkers()
+    return this.getProduction().map(value => ({
+      resource: value.resource,
+      quantity: value.quantity * maxWorkers
+    }))
+  }
+
+  getMaximumConsumption() {
+    const maxWorkers = this.getMaximumWorkers()
+    // quality is percentage and does not scale with workers
+    return this.getConsumption().map(value => ({
+      resource: value.resource,
+      quantity: value.resource.indexOf("QUALITY") > -1 ? value.quantity : value.quantity * maxWorkers
+    }))
+  }
+  
 }
