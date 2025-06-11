@@ -18,7 +18,7 @@ import { Entity } from '@/database/entity';
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { useState } from 'react';
-import { Card, Group, Pagination, Space, Stack, Table, Text, Select } from '@mantine/core';
+import { Card, Group, Pagination, Space, Stack, Table, Text, Input, CloseButton, Tooltip } from '@mantine/core';
 import { resourcesLangIndex } from '@/database/dataMap';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
@@ -45,24 +45,29 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
   const [activePage, setPage] = useState(1);
 
 
+  const allData = gameDatabase.entities.entries()
+    .filter((e) => searchValue.trim().length === 0 ||
+      gameDatabase.getLang(selectedLanguage,
+        e[1].getLocalizedNameIndex()).toLowerCase().indexOf(searchValue.toLowerCase()) > -1).toArray();
 
-
-  const data = chunk(gameDatabase.entities.entries()
-      .filter((e) => searchValue.trim().length === 0 ||
-        gameDatabase.getLang(selectedLanguage,
-          e[1].getLocalizedNameIndex()).toLowerCase().indexOf(searchValue.toLowerCase()) > -1).toArray(),
+  const data = chunk(allData,
     4
   );
 
+  if(activePage - 1 >= data.length) {
+    setPage(data.length)
+  }
 
   function GenerateCard([entityKey, entityInstance]: [string, Entity]) {
     return (
       <Card withBorder shadow="sm" radius="md" key={entityKey}>
         <Card.Section withBorder inheritPadding py="xs">
           <Group justify="space-between">
-            <Text fw={500}>
-              {gameDatabase.getLang(selectedLanguage, entityInstance.getLocalizedNameIndex())}
-            </Text>
+            <Tooltip label={entityKey}>
+              <Text>
+                  {gameDatabase.getLang(selectedLanguage, entityInstance.getLocalizedNameIndex())}
+              </Text>
+            </Tooltip>
           </Group>
         </Card.Section>
         <Space h="md" />
@@ -102,23 +107,23 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
     );
   }
 
-  const entitiesCards = (activePage < data.length ? data[activePage - 1] : []).map(GenerateCard);
-
-
-  const largeData = new Set(gameDatabase.entities.entries().map((e) => {
-    return gameDatabase.getLang(selectedLanguage, e[1].getLocalizedNameIndex());
-  })).values().toArray();
-
+  const entitiesCards = (activePage - 1 < data.length ? data[activePage - 1] : []).map(GenerateCard);
 
   return (
     <Stack align="center">
-      <Select
+      <Input
         placeholder={gameDatabase.getLang(selectedLanguage, 59057)}
-        limit={5}
-        data={largeData}
-        searchable
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
+        value={searchValue}
+        onChange={(event) => setSearchValue(event.currentTarget.value)}
+        rightSectionPointerEvents="all"
+        mt="md"
+        rightSection={
+          <CloseButton
+            aria-label="Clear input"
+            onClick={() => setSearchValue('')}
+            style={{ display: searchValue ? undefined : 'none' }}
+          />
+        }
       />
       <Pagination total={data.length} value={activePage} onChange={setPage} mt="sm" />
     <Stack maw="700px">
