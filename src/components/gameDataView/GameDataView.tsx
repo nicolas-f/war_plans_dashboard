@@ -18,7 +18,7 @@ import { Entity } from '@/database/entity';
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { useState } from 'react';
-import { Card, Group, Pagination, Space, Stack, Table, Text } from '@mantine/core';
+import { Card, Group, Pagination, Space, Stack, Table, Text, Select } from '@mantine/core';
 import { resourcesLangIndex } from '@/database/dataMap';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
@@ -41,8 +41,16 @@ function chunk<T>(array: T[], size: number): T[][] {
 
 
 export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}: GameDataViewProps) {
+  const [searchValue, setSearchValue] = useState('');
   const [activePage, setPage] = useState(1);
-  const data = chunk(gameDatabase.entities.entries().toArray(),
+
+
+
+
+  const data = chunk(gameDatabase.entities.entries()
+      .filter((e) => searchValue.trim().length === 0 ||
+        gameDatabase.getLang(selectedLanguage,
+          e[1].getLocalizedNameIndex()).toLowerCase().indexOf(searchValue.toLowerCase()) > -1).toArray(),
     4
   );
 
@@ -74,12 +82,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
               <Table.Tr key={e.resource}>
                 <Table.Th>{gameDatabase.getLang(selectedLanguage, 2006)}</Table.Th>
                 <Table.Td>
-                  {resourcesLangIndex.has(e.resource)
-                    ? gameDatabase.getLang(
-                      selectedLanguage,
-                      resourcesLangIndex.get(e.resource) || 0
-                    )
-                    : e.resource}
+                  {gameDatabase.getLang( selectedLanguage, resourcesLangIndex.get(e.resource) || 0, e.resource )}
                 </Table.Td>
                 <Table.Td>{(e.quantity).toFixed(1)}</Table.Td>
               </Table.Tr>
@@ -88,12 +91,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
               <Table.Tr key={e.resource}>
                 <Table.Th>{gameDatabase.getLang(selectedLanguage, 2007)}</Table.Th>
                 <Table.Td>
-                  {resourcesLangIndex.has(e.resource)
-                    ? gameDatabase.getLang(
-                      selectedLanguage,
-                      resourcesLangIndex.get(e.resource) || 0
-                    )
-                    : e.resource}
+                  {gameDatabase.getLang( selectedLanguage, resourcesLangIndex.get(e.resource) || 0, e.resource )}
                 </Table.Td>
                 <Table.Td>{(e.quantity).toFixed(1)}</Table.Td>
               </Table.Tr>
@@ -104,10 +102,24 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
     );
   }
 
-  const entitiesCards = data[activePage - 1].map(GenerateCard);
+  const entitiesCards = (activePage < data.length ? data[activePage - 1] : []).map(GenerateCard);
+
+
+  const largeData = new Set(gameDatabase.entities.entries().map((e) => {
+    return gameDatabase.getLang(selectedLanguage, e[1].getLocalizedNameIndex());
+  })).values().toArray();
+
 
   return (
     <Stack align="center">
+      <Select
+        placeholder={gameDatabase.getLang(selectedLanguage, 59057)}
+        limit={5}
+        data={largeData}
+        searchable
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+      />
       <Pagination total={data.length} value={activePage} onChange={setPage} mt="sm" />
     <Stack maw="700px">
       {entitiesCards}
