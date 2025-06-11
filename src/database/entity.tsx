@@ -70,12 +70,26 @@ export class Entity {
    * @param {string} attribute - The attribute name whose numerical value is to be retrieved.
    * @return {number} The numerical value of the specified attribute. Returns 0 if the attribute is not found.
    */
-  getNumberAttribute(attribute : string) : number {
+  getIntAttribute(attribute : string) : number {
     const index = this.data.indexOf(attribute)
     if(index === -1) {
-      return 0
+      return NaN
     } 
     return parseInt(extractLine(this.data, index)[0].substring(attribute.length).trim(), 10)
+  }
+
+  /**
+   * Retrieves the numerical value associated with a specific attribute from the data.
+   *
+   * @param {string} attribute - The attribute name whose numerical value is to be retrieved.
+   * @return {number} The numerical value of the specified attribute. Returns 0 if the attribute is not found.
+   */
+  getFloatAttribute(attribute : string) : number {
+    const index = this.data.indexOf(attribute)
+    if(index === -1) {
+      return NaN
+    }
+    return parseFloat(extractLine(this.data, index)[0].substring(attribute.length).trim())
   }
 
   /**
@@ -93,7 +107,7 @@ export class Entity {
   }
 
   getLocalizedNameIndex() : number {
-    return this.getNumberAttribute("$NAME")
+    return this.getIntAttribute("$NAME")
   }
 
   getType() : string {
@@ -101,7 +115,7 @@ export class Entity {
   }
 
   getMaximumWorkers() : number {
-    return this.getNumberAttribute("$WORKERS_NEEDED")
+    return this.getIntAttribute("$WORKERS_NEEDED")
   }
 
   private getResourceData(prefix: string) {
@@ -144,5 +158,16 @@ export class Entity {
       quantity: value.resource.indexOf("QUALITY") > -1 ? value.quantity : value.quantity * maxWorkers
     }))
   }
-  
+
+  // $QUALITY_OF_LIVING 0.85
+  getQualityOfLiving() {
+    return this.getFloatAttribute("$QUALITY_OF_LIVING")
+  }
+
+  // $STORAGE RESOURCE_TRANSPORT_PASSANGER 55
+
+  getLivingPopulation() {
+    return this.getIntAttribute("$STORAGE RESOURCE_TRANSPORT_PASSANGER")
+  }
+
 }

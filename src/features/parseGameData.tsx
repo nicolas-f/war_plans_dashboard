@@ -25,7 +25,9 @@ import { GameDatabase } from '@/database/gameDatabase';
 function parseIniFile(name : string, data : string, db : GameDatabase) {
   const entity = new Entity(name)
   entity.data = data
-  db.entities.set(name, entity)
+  if(entity.getType().length > 0) {
+    db.entities.set(name, entity)
+  }
 }
 
 /**
@@ -64,7 +66,7 @@ export async function parseGameDataZipEntries(entries: [ZipEntry]): Promise<Game
     if(!entry.data?.directory) {
       const fileEntry = entry as ZipFileEntry<any, any>;
       const extension = entry.name.substring(entry.name.lastIndexOf(".") + 1)
-      if(extension === "ini" && fileEntry.name !== "script.ini") {
+      if(extension === "ini") {
         const text = await fileEntry.getText()
         parseIniFile(entry.getFullname(), text, gameDatabase)
       } else if(extension === "btf" && entry.name.startsWith("soviet")) {

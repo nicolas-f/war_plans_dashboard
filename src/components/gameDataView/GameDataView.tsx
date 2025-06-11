@@ -54,7 +54,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
     4
   );
 
-  if(activePage - 1 >= data.length) {
+  if(data.length > 0 && activePage - 1 >= data.length) {
     setPage(data.length)
   }
 
@@ -65,7 +65,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
           <Group justify="space-between">
             <Tooltip label={entityKey}>
               <Text>
-                  {gameDatabase.getLang(selectedLanguage, entityInstance.getLocalizedNameIndex())}
+                  {gameDatabase.getLang(selectedLanguage, entityInstance.getLocalizedNameIndex(), entityKey)}
               </Text>
             </Tooltip>
           </Group>
@@ -78,11 +78,30 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
               <Table.Td>{entityInstance.getType()}</Table.Td>
               <Table.Td />
             </Table.Tr>
-            <Table.Tr>
+            {
+              !isNaN(entityInstance.getMaximumWorkers()) ?
+              <Table.Tr>
               <Table.Th>{gameDatabase.getLang(selectedLanguage, 2002)}</Table.Th>
-              <Table.Td>{entityInstance.getMaximumWorkers()}</Table.Td>
-              <Table.Td />
-            </Table.Tr>
+                <Table.Td>{entityInstance.getMaximumWorkers()}</Table.Td>
+                <Table.Td />
+              </Table.Tr> : null
+            }
+            {
+              !isNaN(entityInstance.getQualityOfLiving()) ?
+                <Table.Tr>
+                  <Table.Th>{gameDatabase.getLang(selectedLanguage, 2396)}</Table.Th>
+                  <Table.Td>{(entityInstance.getQualityOfLiving()*100).toFixed(0)} %</Table.Td>
+                  <Table.Td />
+                </Table.Tr> : null
+            }
+            {
+              !isNaN(entityInstance.getLivingPopulation()) ?
+                <Table.Tr>
+                  <Table.Th>{gameDatabase.getLang(selectedLanguage, 2115)}</Table.Th>
+                  <Table.Td>{entityInstance.getLivingPopulation()}</Table.Td>
+                  <Table.Td />
+                </Table.Tr> : null
+            }
             {entityInstance.getMaximumProduction().map((e) => (
               <Table.Tr key={e.resource}>
                 <Table.Th>{gameDatabase.getLang(selectedLanguage, 2006)}</Table.Th>
@@ -107,7 +126,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
     );
   }
 
-  const entitiesCards = (activePage - 1 < data.length ? data[activePage - 1] : []).map(GenerateCard);
+  const entitiesCards = (activePage - 1 < data.length && data[activePage - 1] ? data[activePage - 1].map(GenerateCard) : []);
 
   return (
     <Stack align="center">
