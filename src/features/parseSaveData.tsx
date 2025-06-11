@@ -1,5 +1,7 @@
+;
+
 /*
- * Copyright (C) 2025
+ * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,17 +18,42 @@
  */
 
 import { ZipEntry, ZipFileEntry } from '@zip.js/zip.js';
-import { createZipFileSystem } from '@/features/zipFileSystem';
-import { SaveGameDatabase } from '@/database/saveGameDatabase';
 import { extractLine } from '@/database/entity';
+import { SaveGameDatabase } from '@/database/saveGameDatabase';
+import { createZipFileSystem } from '@/features/zipFileSystem';
 
+
+;
+
+
+
+
+
+
+
+
+function convertToUnixEpoch(year: number, dayOfYear: number): number {
+  const janFirstUtc = Date.UTC(year, 0, 1); // January 1st of the year, UTC
+  // Add days in milliseconds
+  return janFirstUtc + (dayOfYear - 1) * 86400000; // Convert to seconds
+}
+
+/**
+ * Create an index of all the dates specified in statistics, using treemap to quickly fetch ranges
+ *
+ * @param content
+ * @param saveGameDatabase
+ * @param keyword
+ */
 function fetchRecordIndex(content: string, saveGameDatabase: SaveGameDatabase, keyword: string) {
   let recordIndex = content.indexOf(keyword)
   while(recordIndex !== -1) {
-    const day = parseInt(extractLine("$DATE_DAY", recordIndex)[0].substring("$DATE_DAY".length).trim(), 10)
-    const year = parseInt(extractLine("$DATE_YEAR", recordIndex)[0].substring("$DATE_YEAR".length).trim(), 10)
-    const key = `${year}-${day}`
-    saveGameDatabase.dateIndex[key] = recordIndex
+    const day = parseInt(extractLine(content, content.indexOf("$DATE_DAY", recordIndex))[0]
+      .substring("$DATE_DAY".length).trim(), 10)
+    const year = parseInt(extractLine(content, content.indexOf("$DATE_YEAR", recordIndex))[0]
+      .substring("$DATE_YEAR".length).trim(), 10)
+    const key = convertToUnixEpoch(year, day)
+    saveGameDatabase.dateIndex.set(key, recordIndex)
     recordIndex = content.indexOf(keyword, recordIndex + 1)
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025
+ * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import TreeMap from 'ts-treemap';
+
 export class SaveGameDatabase {
   /**
    * Full content of the statistics.ini file (large)
@@ -23,6 +25,6 @@ export class SaveGameDatabase {
   /**
    * byte index for all dates in statistics string
    */
-  dateIndex : {[key : string] : number} = { }
+  dateIndex = new TreeMap<number, number>()
 
 }

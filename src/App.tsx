@@ -1,6 +1,5 @@
-import { GameDatabase } from '@/database/gameDatabase';
 /*
- * Copyright (C) 2025
+ * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -43,13 +42,18 @@ import {
   Space,
   useComputedColorScheme,
   useMantineColorScheme,
+  Group,
 } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
 import { parseSaveGameZipFileFromUrl } from '@/features/parseSaveData';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
 import GameDataView from '@/components/gameDataView/GameDataView';
+import { GameDatabase } from '@/database/gameDatabase';
+import dayjs from 'dayjs';
+
 
 function LoadSaveGameFileInput() {
   //https://github.com/gildas-lormeau/zip-manager/blob/main/src/zip-manager/components/TopButtonBar.jsx
@@ -96,7 +100,7 @@ function DarkLightButton() {
     <ActionIcon
       onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
       variant="default"
-      size={42}
+      size="input-sm"
       aria-label="Toggle color scheme"
     >
       <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
@@ -110,6 +114,8 @@ export default function App() {
   const [gameDatabase, setGameDatabase] = useState(new GameDatabase());
   const [savegameDatabase, setSavegameDatabase] = useState(new SaveGameDatabase());
   const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
   const pages = [
     { id: 'settings',
@@ -135,17 +141,42 @@ export default function App() {
   const [activePage, setActivePage] = useState(pages[0].id);
 
   React.useEffect(() => {
-    const loadDatabase = async () => {
-      try {
-        setLoading(true);
-        const data = await parseZipFileFromUrl(gameData);
-        const saveGameData = await parseSaveGameZipFileFromUrl(savegameData);
-        setGameDatabase(data);
-        setSavegameDatabase(saveGameData);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const loadDatabase = async () => {
+          try {
+              setLoading(true);
+              await loadGameData();
+          } finally {
+              setLoading(false);
+          }
+      };
+
+      const loadGameData = async () => {
+          const GAME_DATABASE = await parseZipFileFromUrl(gameData);
+          const SAVE_GAME_DATABASE = await parseSaveGameZipFileFromUrl(savegameData);
+
+          setGameDatabase(GAME_DATABASE);
+          setSavegameDatabase(SAVE_GAME_DATABASE);
+          const epochStartValue = SAVE_GAME_DATABASE.dateIndex.firstKey();
+
+          if (!startDate && epochStartValue !== undefined && epochStartValue !== null) {
+            const INITIAL_EPOCH = Number(epochStartValue);
+
+            if (!Number.isNaN(INITIAL_EPOCH)) {
+              const FORMATTED_DATE = dayjs(INITIAL_EPOCH).format('YYYY-MM-DD');
+              setStartDate(FORMATTED_DATE);
+            }
+          }
+
+          const epochEndValue = SAVE_GAME_DATABASE.dateIndex.lastKey()
+          if(!endDate && epochEndValue !== undefined && epochEndValue !== null) {
+            const INITIAL_EPOCH = Number(epochEndValue);
+
+            if (!Number.isNaN(INITIAL_EPOCH)) {
+              const FORMATTED_DATE = dayjs(INITIAL_EPOCH).format('YYYY-MM-DD');
+              setEndDate(FORMATTED_DATE);
+            }
+          }
+      };
     loadDatabase();
   }, []);
 
@@ -162,16 +193,24 @@ export default function App() {
           padding="md"
         >
             <AppShell.Header>
-            <Flex gap="md" justify="flex-end" align="center" direction="row" wrap="wrap">
-              <Box w={180}>
+              <Space h="5px" />
+              <Group justify="center" gap="lg">
+              <DateInput
+                value={startDate}
+                onChange={setStartDate}
+                placeholder={gameDatabase.getLang(selectedLanguage, 1653)}
+              />
+              <DateInput
+                value={endDate}
+                onChange={setEndDate}
+                placeholder={gameDatabase.getLang(selectedLanguage, 1654)}
+              />
                 <NativeSelect
                   value={selectedLanguage}
                   onChange={(event) => setSelectedLanguage(event.currentTarget.value)}
                   data={gameDatabase.translations.keys().toArray()} />
-              </Box>
               <DarkLightButton />
-              <Space h="md" />
-            </Flex>
+            </Group>
           </AppShell.Header>
           <AppShell.Navbar>
             <NavigationBar defaultId={activePage} links={pages} onActiveChange={setActivePage} />

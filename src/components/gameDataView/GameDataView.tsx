@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025
+ * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -18,6 +18,7 @@ import { Badge, Box, Button, Card, Group, Pagination, Space, Stack, Table, Text 
 import { GameDatabase } from '@/database/gameDatabase';
 import { useState } from 'react';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
+import { resourcesLangIndex } from '@/database/dataMap';
 
 export interface GameDataViewProps {
   gameDatabase: GameDatabase
@@ -63,16 +64,16 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
             <Table.Td />
           </Table.Tr>
           {entityInstance.getProduction().map((e) => (
-            <Table.Tr>
+            <Table.Tr key={e.resource}>
               <Table.Th>{gameDatabase.getLang(selectedLanguage, 2006)}</Table.Th>
-              <Table.Td>{e.resource}</Table.Td>
+              <Table.Td>{resourcesLangIndex.has(e.resource) ? gameDatabase.getLang(selectedLanguage, (resourcesLangIndex.get(e.resource)) || 0) : e.resource}</Table.Td>
               <Table.Td>{(e.quantity*entityInstance.getWorkersNeeded()).toFixed(1)}</Table.Td>
             </Table.Tr>
           ))}
           {entityInstance.getConsumption().map((e) => (
-            <Table.Tr>
+            <Table.Tr key={e.resource}>
               <Table.Th>{gameDatabase.getLang(selectedLanguage, 2007)}</Table.Th>
-              <Table.Td>{e.resource}</Table.Td>
+              <Table.Td>{resourcesLangIndex.has(e.resource) ? gameDatabase.getLang(selectedLanguage, (resourcesLangIndex.get(e.resource)) || 0) : e.resource}</Table.Td>
               <Table.Td>{(e.quantity*entityInstance.getWorkersNeeded()).toFixed(1)}</Table.Td>
             </Table.Tr>
           ))}
