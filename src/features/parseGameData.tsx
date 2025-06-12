@@ -86,3 +86,10 @@ export async function parseZipFileFromUrl(url : string) {
   const entries = await root.importHttpContent(url);
   return parseGameDataZipEntries(entries)
 }
+
+export async function parseZipFileFromBytes(data : Uint8Array) {
+  const apiFilesystem = createZipFileSystem();
+  const { root } = apiFilesystem;
+  const entries = await root.importUint8Array(data);
+  return parseGameDataZipEntries(entries)
+}

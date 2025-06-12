@@ -135,26 +135,65 @@ export class Entity {
     return resources
   }
 
-  getProduction() {
-    return this.getResourceData("$PRODUCTION")
+  getProduction(year : number = 1960) {
+    let production = this.getResourceData("$PRODUCTION ")
+    const productionDecreaseIndex = this.data.indexOf("$PRODUCTION_DECREASE_ACCORDING_YEAR")
+    //This token recalculate factory production every year according..
+    //FinalProductionFactor = 1.0 - (GameYear - Param1) / Param2
+    //FinalProductionFactor = clamp(FinalConsumption, Param3, 1.0)
+    if(productionDecreaseIndex !== -1) {
+      const productionDecrease = extractLine(this.data, productionDecreaseIndex)
+      const parts = productionDecrease[0].trim().split(/\s+/);
+      if(parts.length >= 4) {
+        const yearParam = parseInt(parts[1], 10)
+        const factorParam = parseFloat(parts[2])
+        const clampValue = parseFloat(parts[3])
+        const factor = Math.min(Math.max(clampValue, 1.0 - (year - yearParam) / factorParam), 1)
+        production = production.map(value => ({
+          resource: value.resource,
+          quantity: value.quantity * factor
+        }))
+      }
+    }
+    return production
   }
 
-  getConsumption() {
-    return this.getResourceData("$CONSUMPTION")
+  getConsumption(year : number = 1960) {
+    let consumption = this.getResourceData("$CONSUMPTION ")
+
+    const consumptionIncreaseIndex = this.data.indexOf("$CONSUMPTION_INCREASE_ACCORDING_YEAR")
+    //This token recalculate factory consumption every year according..
+    //FinalConsumption = (GameYear - Param1) / Param2
+    //FinalConsumption = clamp(FinalConsumption, 0.0f, Param3)
+    if(consumptionIncreaseIndex !== -1) {
+      const consumptionIncrease = extractLine(this.data, consumptionIncreaseIndex)
+      const parts = consumptionIncrease[0].trim().split(/\s+/);
+      if(parts.length >= 4) {
+        const yearParam = parseInt(parts[1], 10)
+        const factorParam = parseFloat(parts[2])
+        const clampValue = parseFloat(parts[3])
+        const factor = Math.min(Math.max(0, (year - yearParam) / factorParam), clampValue)
+        consumption = consumption.map(value => ({
+          resource: value.resource,
+          quantity: value.quantity + value.quantity * factor
+        }))
+      }
+    }
+    return consumption
   }
 
-  getMaximumProduction() {
+  getMaximumProduction(year : number = 1960) {
     const maxWorkers = this.getMaximumWorkers()
-    return this.getProduction().map(value => ({
+    return this.getProduction(year).map(value => ({
       resource: value.resource,
       quantity: value.quantity * maxWorkers
     }))
   }
 
-  getMaximumConsumption() {
+  getMaximumConsumption(year : number = 1960) {
     const maxWorkers = this.getMaximumWorkers()
     // quality is percentage and does not scale with workers
-    return this.getConsumption().map(value => ({
+    return this.getConsumption(year).map(value => ({
       resource: value.resource,
       quantity: value.resource.indexOf("QUALITY") > -1 ? value.quantity : value.quantity * maxWorkers
     }))
