@@ -92,6 +92,7 @@ function DarkLightButton() {
  */
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [savegameLoading, setSavegameLoading] = useState(false);
   const [gameDatabase, setGameDatabase] = useState(new GameDatabase());
   const [savegameDatabase, setSavegameDatabase] = useState(new SaveGameDatabase());
   const [selectedLanguage, setSelectedLanguage] = useState('English');
@@ -147,15 +148,23 @@ export default function App() {
 
   async function onDropFile(files: FileWithPath[]) {
     if(files.length === 0) {return;}
-    if(files[0].name.toLowerCase().endsWith('.zip')) {
-      const arrayBuffer = await files[0].arrayBuffer();
-      const SAVE_GAME_DATABASE = await parseSaveGameZipFileFromBlob(new Blob([arrayBuffer]));
-      setSavegameDatabase(SAVE_GAME_DATABASE);
-    } else if(files[0].name.toLowerCase().endsWith('.ini')) {
-      const saveGameDatabase = new SaveGameDatabase()
-      const text = await files[0].text()
-      parseSaveGameIniFile(text, saveGameDatabase)
-      setSavegameDatabase(saveGameDatabase);
+    setSavegameLoading(true);
+    try{
+      const start = new Date().getTime();
+      if(files[0].name.toLowerCase().endsWith('.zip')) {
+        const arrayBuffer = await files[0].arrayBuffer();
+        const SAVE_GAME_DATABASE = await parseSaveGameZipFileFromBlob(new Blob([arrayBuffer]));
+        setSavegameDatabase(SAVE_GAME_DATABASE);
+      } else if(files[0].name.toLowerCase().endsWith('.ini')) {
+        const saveGameDatabase = new SaveGameDatabase()
+        const text = await files[0].text()
+        parseSaveGameIniFile(text, saveGameDatabase)
+        setSavegameDatabase(saveGameDatabase);
+      }
+      const elapsed = new Date().getTime() - start;
+      console.log(`SaveGame data processed in ${elapsed} ms`);
+    } finally {
+      setSavegameLoading(false);
     }
   }
 
@@ -191,6 +200,7 @@ export default function App() {
               switch (activePage) {
                 case 'settings':
                   return <SettingsView
+                    loading={savegameLoading}
                     onDrop={onDropFile}
                     onReject={(files) => console.log('rejected files', files)}/>;
                 case 'gamedata':
