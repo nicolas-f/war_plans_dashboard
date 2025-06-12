@@ -66,7 +66,8 @@ export async function parseGameDataZipEntries(entries: [ZipEntry]): Promise<Game
     if(!entry.data?.directory) {
       const fileEntry = entry as ZipFileEntry<any, any>;
       const extension = entry.name.substring(entry.name.lastIndexOf(".") + 1)
-      if(extension === "ini") {
+      if(extension === "ini" &&
+        "script.ini,stats.ini,buildingtypes.ini,buildingtypes_old.ini".indexOf(entry.name) === -1 ) {
         const text = await fileEntry.getText()
         parseIniFile(entry.getFullname(), text, gameDatabase)
       } else if(extension === "btf" && entry.name.startsWith("soviet")) {

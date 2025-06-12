@@ -115,6 +115,7 @@ export class Entity {
   }
 
   getMaximumWorkers() : number {
+    // String 585: "Travailleurs"
     return this.getIntAttribute("$WORKERS_NEEDED")
   }
 
