@@ -15,17 +15,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import TreeMap from 'ts-treemap';
 
-export class SaveGameDatabase {
-  /**
-   * Full content of the statistics.ini file (large)
-   */
-  statistics = ""
-  /**
-   * byte index for all dates in statistics string
-   */
-  dateIndex = new TreeMap<number, number>()
+import { expect, test } from 'vitest';
+import { SaveGameDatabase } from '@/database/saveGameDatabase';
+import { parseSaveGameIniFile } from '@/features/parseSaveData';
+import ef from '/src/__tests__/stats.ini?raw';
 
-  currentStateIndex = 0
-}
+test('testParseStats', () => {
+  const saveGameDatabase = new SaveGameDatabase()
+  parseSaveGameIniFile(ef, saveGameDatabase)
+
+  expect(saveGameDatabase.dateIndex.size).toBe(3)
+  // before 1970 such as epoch is negative (1960)
+  expect(Array.from(saveGameDatabase.dateIndex.keys())).toStrictEqual([ -311212800000, -311040000000,
+      -310694400000, ])
+  expect(saveGameDatabase.currentStateIndex).toBe(46926)
+});

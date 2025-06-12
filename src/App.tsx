@@ -23,15 +23,11 @@ import React, { useState } from 'react';
 import {
   IconBuildingFactory2,
   IconDatabase,
-  IconFileZip,
   IconGraph,
   IconMoon,
-  IconPhoto,
   IconSettings,
   IconSun,
-  IconUpload,
-  IconX,
-  IconZip,
+
 } from '@tabler/icons-react';
 import savegameData from '/src/assets/data/default_save.zip?url';
 import gameData from '/src/assets/data/media_soviet.zip?url';
@@ -40,31 +36,32 @@ import {
   ActionIcon,
   AppShell,
   Box,
-  Flex,
   Group,
   LoadingOverlay,
   MantineProvider,
   NativeSelect,
   Notification,
   Space,
-  Text,
   useComputedColorScheme,
   useMantineColorScheme,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { Dropzone, DropzoneProps, IMAGE_MIME_TYPE, FileWithPath } from '@mantine/dropzone';
 import GameDataView from '@/components/GameDataView/GameDataView';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 import { StatisticsView } from '@/components/StatisticsView/StatisticsView';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
-import { parseSaveGameZipFileFromUrl } from '@/features/parseSaveData';
+import {
+  parseSaveGameIniFile,
+  parseSaveGameZipFileFromBlob,
+  parseSaveGameZipFileFromUrl,
+} from '@/features/parseSaveData';
 import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
 import {SettingsView} from "@/components/SettingsView/SettingsView";
-function onDropSaveGame (saveFile :FileWithPath[]) {
+import { a } from 'vitest/dist/chunks/suite.d.FvehnV49';
+import { FileWithPath } from 'react-dropzone';
 
-}
 
 
 function ProductionGameContent() {
@@ -98,8 +95,6 @@ export default function App() {
   const [gameDatabase, setGameDatabase] = useState(new GameDatabase());
   const [savegameDatabase, setSavegameDatabase] = useState(new SaveGameDatabase());
   const [selectedLanguage, setSelectedLanguage] = useState('English');
-  const [startDate, setStartDate] = useState<string | null>(null);
-  const [endDate, setEndDate] = useState<string | null>(null);
 
   const pages = [
     {
@@ -132,7 +127,7 @@ export default function App() {
         setLoading(true);
         const start = new Date().getTime();
         await loadGameData();
-        let elapsed = new Date().getTime() - start;
+        const elapsed = new Date().getTime() - start;
         console.log(`Game data loaded in ${elapsed} ms`);
       } finally {
         setLoading(false);
@@ -146,70 +141,58 @@ export default function App() {
       setGameDatabase(GAME_DATABASE);
       setSavegameDatabase(SAVE_GAME_DATABASE);
 
-      const epochStartValue = SAVE_GAME_DATABASE.dateIndex.firstKey();
-      if (!startDate && epochStartValue !== undefined && epochStartValue !== null) {
-        const INITIAL_EPOCH = Number(epochStartValue);
-
-        if (!Number.isNaN(INITIAL_EPOCH)) {
-          const FORMATTED_DATE = dayjs(INITIAL_EPOCH).format('YYYY-MM-DD');
-          setStartDate(FORMATTED_DATE);
-        }
-      }
-
-      const epochEndValue = SAVE_GAME_DATABASE.dateIndex.lastKey();
-      if (!endDate && epochEndValue !== undefined && epochEndValue !== null) {
-        const INITIAL_EPOCH = Number(epochEndValue);
-
-        if (!Number.isNaN(INITIAL_EPOCH)) {
-          const FORMATTED_DATE = dayjs(INITIAL_EPOCH).format('YYYY-MM-DD');
-          setEndDate(FORMATTED_DATE);
-        }
-      }
     };
     loadDatabase();
   }, []);
+
+  async function onDropFile(files: FileWithPath[]) {
+    if(files.length === 0) {return;}
+    if(files[0].name.toLowerCase().endsWith('.zip')) {
+      const arrayBuffer = await files[0].arrayBuffer();
+      const SAVE_GAME_DATABASE = await parseSaveGameZipFileFromBlob(new Blob([arrayBuffer]));
+      setSavegameDatabase(SAVE_GAME_DATABASE);
+    } else if(files[0].name.toLowerCase().endsWith('.ini')) {
+      const saveGameDatabase = new SaveGameDatabase()
+      const text = await files[0].text()
+      parseSaveGameIniFile(text, saveGameDatabase)
+      setSavegameDatabase(saveGameDatabase);
+    }
+  }
 
   return (
     <MantineProvider defaultColorScheme="dark">
       <Box pos="relative">
         <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
         <AppShell
-          header={{ height: 50 }}
+          header={{ collapsed : true,
+            height: 60 }}
           navbar={{
             width: 330,
             breakpoint: 'sm',
           }}
           padding="md"
         >
-          <AppShell.Header>
+          <AppShell.Header />
+          <AppShell.Navbar>
+            <NavigationBar defaultId={activePage} links={pages} onActiveChange={setActivePage} />
             <Space h="5px" />
-            <Group justify="center" gap="lg">
-              <DateInput
-                value={startDate}
-                onChange={setStartDate}
-                placeholder={gameDatabase.getLang(selectedLanguage, 1653)}
-              />
-              <DateInput
-                value={endDate}
-                onChange={setEndDate}
-                placeholder={gameDatabase.getLang(selectedLanguage, 1654)}
-              />
+            <Group justify="left" gap="lg">
+              <Space h="5px" />
+              <DarkLightButton />
               <NativeSelect
                 value={selectedLanguage}
                 onChange={(event) => setSelectedLanguage(event.currentTarget.value)}
                 data={gameDatabase.translations.keys().toArray()}
               />
-              <DarkLightButton />
             </Group>
-          </AppShell.Header>
-          <AppShell.Navbar>
-            <NavigationBar defaultId={activePage} links={pages} onActiveChange={setActivePage} />
           </AppShell.Navbar>
           <AppShell.Main>
             {(() => {
               switch (activePage) {
                 case 'settings':
-                  return <SettingsView />;
+                  return <SettingsView
+                    onDrop={onDropFile}
+                    onReject={(files) => console.log('rejected files', files)}/>;
                 case 'gamedata':
                   return (
                     <GameDataView

@@ -18,7 +18,6 @@ import { Entity } from '@/database/entity';
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { expect, test } from 'vitest'
-import { parseZipFileFromUrl } from '@/features/parseGameData';
 import ef from '/src/__tests__/eletronic_factory.ini?raw';
 
 

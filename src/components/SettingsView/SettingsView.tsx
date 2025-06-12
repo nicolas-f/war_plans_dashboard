@@ -21,12 +21,10 @@ import { IconFileZip, IconUpload, IconX } from '@tabler/icons-react';
 import React from 'react';
 
 
-export function SettingsView(props: Partial<DropzoneProps>) {
+export function SettingsView(props: DropzoneProps) {
 
   return (
     <Dropzone
-      onDrop={(files) => console.log('accepted files', files)}
-      onReject={(files) => console.log('rejected files', files)}
       accept={{
         'text/plain': ['.ini'], // All images
         'application/zip': ['.zip'],

@@ -1,5 +1,3 @@
-;
-
 /*
  * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
@@ -23,15 +21,6 @@ import { SaveGameDatabase } from '@/database/saveGameDatabase';
 import { createZipFileSystem } from '@/features/zipFileSystem';
 
 
-;
-
-
-
-
-
-
-
-
 function convertToUnixEpoch(year: number, dayOfYear: number): number {
   const janFirstUtc = Date.UTC(year, 0, 1); // January 1st of the year, UTC
   // Add days in milliseconds
@@ -52,8 +41,14 @@ function fetchRecordIndex(content: string, saveGameDatabase: SaveGameDatabase, k
       .substring("$DATE_DAY".length).trim(), 10)
     const year = parseInt(extractLine(content, content.indexOf("$DATE_YEAR", recordIndex))[0]
       .substring("$DATE_YEAR".length).trim(), 10)
-    const key = convertToUnixEpoch(year, day)
-    saveGameDatabase.dateIndex.set(key, recordIndex)
+    if(year > 0 ){
+      // historical data
+      const key = convertToUnixEpoch(year, day)
+      saveGameDatabase.dateIndex.set(key, recordIndex)
+    } else {
+      // current data (not complete)
+      saveGameDatabase.currentStateIndex = recordIndex
+    }
     recordIndex = content.indexOf(keyword, recordIndex + 1)
   }
 }
@@ -70,7 +65,7 @@ function fetchRecordIndex(content: string, saveGameDatabase: SaveGameDatabase, k
  * @param content
  * @param saveGameDatabase
  */
-function parseIniFile(content: string, saveGameDatabase: SaveGameDatabase) {
+export function parseSaveGameIniFile(content: string, saveGameDatabase: SaveGameDatabase) {
   saveGameDatabase.statistics = content
   fetchRecordIndex(content, saveGameDatabase, "$STAT_RECORD")
   fetchRecordIndex(content, saveGameDatabase, "$STAT_CURRENT")
@@ -83,7 +78,7 @@ export async function parseSaveGameDataZipEntries(entries: [ZipEntry]): Promise<
       const fileEntry = entry as ZipFileEntry<any, any>;
       if(entry.name === "stats.ini") {
         const text = await fileEntry.getText()
-        parseIniFile(text, saveGameDatabase)
+        parseSaveGameIniFile(text, saveGameDatabase)
       }
     }
   }
@@ -94,5 +89,12 @@ export async function parseSaveGameZipFileFromUrl(url : string) {
   const apiFilesystem = createZipFileSystem();
   const { root } = apiFilesystem;
   const entries = await root.importHttpContent(url);
+  return parseSaveGameDataZipEntries(entries)
+}
+
+export async function parseSaveGameZipFileFromBlob(blob : Blob) {
+  const apiFilesystem = createZipFileSystem();
+  const { root } = apiFilesystem;
+  const entries = await root.importBlob(blob)
   return parseSaveGameDataZipEntries(entries)
 }
