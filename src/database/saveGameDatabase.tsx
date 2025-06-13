@@ -39,27 +39,28 @@ export class SaveGameDatabase {
    * @param to Stop epoch filter to extract data
    * @param limit Limit the number of items to retrieve
    */
-  getDataSet(keyTree:string[], from : number, to : number, limit : number) : number[] {
+  getDataSet(keyTree:string[], from : number, to : number, limit : number) {
     // find dates keys correspond to the requested range
     const it : MapIterator<number, number> = this.dateIndex.lowerBound(from)
-    let indexes = new Array<number>()
+    let indexes = new Array<{date:number, location:number}>()
     while (it.value != null && it.key <= to) {
-      indexes.push(it.value)
+      indexes.push({date:it.key, location:it.value})
       it.next()
     }
     if(indexes.length > limit) {
       const step = Math.ceil(indexes.length / limit)
       indexes = indexes.filter((_, i) => i % step === 0)
     }
-    const dataset = new Array<number>()
-    for(let location of indexes) {
+    const dataset = new Array<{date:number, value: number}>()
+    let date, location;
+    for({ date, location } of indexes) {
       for(const key of keyTree) {
         location = this.statistics.indexOf(key, location)
       }
       const line = extractLine(this.statistics, location)
       const data = getFloatAttributes(line[0])
       if(data.length > 0) {
-        dataset.push(data[0])
+        dataset.push({date, value:data[0]})
       }
     }
     return dataset
