@@ -58,12 +58,7 @@ import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
 import {SettingsView} from "@/components/SettingsView/SettingsView";
 import { FileWithPath } from 'react-dropzone';
-
-
-
-function ProductionGameContent() {
-  return <Notification title="We notify you that">Production data page content</Notification>;
-}
+import { ProductionGameContent } from '@/components/ProductionPlannerView/ProductionPlannerView';
 
 function DarkLightButton() {
   const { setColorScheme } = useMantineColorScheme();
@@ -208,7 +203,11 @@ export default function App() {
                     />
                   );
                 case 'production':
-                  return <ProductionGameContent />;
+                  return <ProductionGameContent
+                    gameDatabase={gameDatabase}
+                    saveGameDatabase={savegameDatabase}
+                    selectedLanguage={selectedLanguage}
+                  />;
                 case 'stats':
                   return (
                     <StatisticsView

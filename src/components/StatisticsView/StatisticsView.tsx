@@ -86,7 +86,7 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
   const resourceLabels = resourcesLangIndex
     .entries()
     .map((e) => ({ value: e[0], label: gameDatabase.getLang(selectedLanguage, e[1]) }))
-    .toArray();
+    .toArray().toSorted((a, b) => a.label.localeCompare(b.label));
   const [selectedResource, setSelectedResource] = useState(['clothes']);
   const chartData = selectedResource.map((e) => ({
     resource: e,

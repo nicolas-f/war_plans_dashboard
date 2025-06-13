@@ -50,12 +50,12 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
       gameDatabase.getLang(selectedLanguage,
         e[1].getLocalizedNameIndex()).toLowerCase().indexOf(searchValue.toLowerCase()) > -1).toArray();
 
-  const data = chunk(allData,
+  const entitiesChunks = chunk(allData,
     4
   );
 
-  if(data.length > 0 && activePage - 1 >= data.length) {
-    setPage(data.length)
+  if(entitiesChunks.length > 0 && activePage - 1 >= entitiesChunks.length) {
+    setPage(entitiesChunks.length)
   }
 
   function GenerateCard([entityKey, entityInstance]: [string, Entity]) {
@@ -126,7 +126,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
     );
   }
 
-  const entitiesCards = (activePage - 1 < data.length && data[activePage - 1] ? data[activePage - 1].map(GenerateCard) : []);
+  const entitiesCards = (activePage - 1 < entitiesChunks.length && entitiesChunks[activePage - 1] ? entitiesChunks[activePage - 1].map(GenerateCard) : []);
 
   return (
     <Stack align="center">
@@ -144,7 +144,7 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
           />
         }
       />
-      <Pagination total={data.length} value={activePage} onChange={setPage} mt="sm" />
+      <Pagination total={entitiesChunks.length} value={activePage} onChange={setPage} mt="sm" />
     <Stack maw="700px">
       {entitiesCards}
     </Stack>

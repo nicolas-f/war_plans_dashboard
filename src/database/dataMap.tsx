@@ -73,3 +73,9 @@ export const resourcesLangIndex : Map<string, number> = new Map<string, number>(
   explosives: 563,
   heat: 58008,
 }));
+
+
+export const buildingTypeLangIndex : Map<string, number> = new Map<string, number>(Object.entries({
+  LIVING: 13049,
+  FACTORY: 6350,
+}));
