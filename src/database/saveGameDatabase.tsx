@@ -40,10 +40,10 @@ export class SaveGameDatabase {
    * @param limit Limit the number of items to retrieve
    */
   getDataSet(keyTree:string[], from : number, to : number, limit : number) : number[] {
-    // find dates keys correspond to requested range
+    // find dates keys correspond to the requested range
     const it : MapIterator<number, number> = this.dateIndex.lowerBound(from)
-    let indexes = new Array<number>(this.dateIndex.size)
-    while (it.value != null && it.key < to) {
+    let indexes = new Array<number>()
+    while (it.value != null && it.key <= to) {
       indexes.push(it.value)
       it.next()
     }
@@ -51,7 +51,7 @@ export class SaveGameDatabase {
       const step = Math.ceil(indexes.length / limit)
       indexes = indexes.filter((_, i) => i % step === 0)
     }
-    const dataset = new Array<number>(indexes.length)
+    const dataset = new Array<number>()
     for(let location of indexes) {
       for(const key of keyTree) {
         location = this.statistics.indexOf(key, location)

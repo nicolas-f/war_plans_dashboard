@@ -18,7 +18,7 @@
 
 import { expect, test } from 'vitest';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
-import { parseSaveGameIniFile } from '@/features/parseSaveData';
+import { convertToUnixEpoch, parseSaveGameIniFile } from '@/features/parseSaveData';
 import ef from '/src/__tests__/stats.ini?raw';
 
 test('testParseStats', () => {
@@ -30,4 +30,9 @@ test('testParseStats', () => {
   expect(Array.from(saveGameDatabase.dateIndex.keys())).toStrictEqual([ -311212800000, -311040000000,
       -310694400000, ])
   expect(saveGameDatabase.currentStateIndex).toBe(46926)
+
+  const dataSet = saveGameDatabase.getDataSet(["$Economy_PurchaseCostRUB", "clothes"], convertToUnixEpoch(1960, 52),
+    convertToUnixEpoch(1960, 58), 5);
+
+  expect(dataSet).toStrictEqual([ 1383.479126, 1383.607422, 1384.155151 ])
 });

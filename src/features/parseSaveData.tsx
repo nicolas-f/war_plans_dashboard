@@ -21,7 +21,7 @@ import { SaveGameDatabase } from '@/database/saveGameDatabase';
 import { createZipFileSystem } from '@/features/zipFileSystem';
 
 
-function convertToUnixEpoch(year: number, dayOfYear: number): number {
+export function convertToUnixEpoch(year: number, dayOfYear: number): number {
   const janFirstUtc = Date.UTC(year, 0, 1); // January 1st of the year, UTC
   // Add days in milliseconds
   return janFirstUtc + (dayOfYear - 1) * 86400000; // Convert to seconds
