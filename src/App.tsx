@@ -18,7 +18,6 @@
 import '@mantine/core/styles.css';
 import '@mantine/dropzone/styles.css';
 
-import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import {
   IconBuildingFactory2,
@@ -45,7 +44,6 @@ import {
   useComputedColorScheme,
   useMantineColorScheme,
 } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
 import GameDataView from '@/components/GameDataView/GameDataView';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 import { StatisticsView } from '@/components/StatisticsView/StatisticsView';
@@ -59,7 +57,6 @@ import {
 import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
 import {SettingsView} from "@/components/SettingsView/SettingsView";
-import { a } from 'vitest/dist/chunks/suite.d.FvehnV49';
 import { FileWithPath } from 'react-dropzone';
 
 
@@ -185,8 +182,7 @@ export default function App() {
           <AppShell.Navbar>
             <NavigationBar defaultId={activePage} links={pages} onActiveChange={setActivePage} />
             <Space h="5px" />
-            <Group justify="left" gap="lg">
-              <Space h="5px" />
+            <Group justify="center" gap="lg">
               <DarkLightButton />
               <NativeSelect
                 value={selectedLanguage}
