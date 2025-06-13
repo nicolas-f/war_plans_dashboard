@@ -17,7 +17,7 @@ import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.typ
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { Autocomplete, Slider, Stack, Table } from '@mantine/core';
+import { Autocomplete, Slider, Stack, Table, NumberInput } from '@mantine/core';
 import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
@@ -83,7 +83,9 @@ export function ProductionGameContent({
           { value: 100, label: '100%' },
         ]}
       /></Table.Td>
-    <Table.Td>{element.mass}</Table.Td>
+    <Table.Td>
+      <NumberInput value={1} min={1} w="80px" />
+    </Table.Td>
     <Table.Td>{element.position}</Table.Td>
   </Table.Tr>
 ));
@@ -103,7 +105,7 @@ export function ProductionGameContent({
           <Table.Tr>
             <Table.Th>{gameDatabase.getLang(selectedLanguage, 13900)}</Table.Th>
             <Table.Th>{gameDatabase.getLang(selectedLanguage, 8090)}</Table.Th>
-            <Table.Th>Symbol</Table.Th>
+            <Table.Th>Quantity</Table.Th>
             <Table.Th>Atomic mass</Table.Th>
           </Table.Tr>
         </Table.Thead>
