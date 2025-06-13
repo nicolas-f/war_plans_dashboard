@@ -4333,6 +4333,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jstreemap@npm:^1.28.2":
+  version: 1.28.2
+  resolution: "jstreemap@npm:1.28.2"
+  checksum: 10c0/d7f55ff23c3bc1f54a7b92675fd785ab4f069052b25137b2d1d47a10722dd8f8442d1a710d0d3144322412e654e3f3f71f4326f7126d7287497d4cdbd94c9f80
+  languageName: node
+  linkType: hard
+
 "jsx-ast-utils@npm:^2.4.1 || ^3.0.0, jsx-ast-utils@npm:^3.3.5":
   version: 3.3.5
   resolution: "jsx-ast-utils@npm:3.3.5"
@@ -4551,6 +4558,7 @@ __metadata:
     eslint-plugin-react: "npm:^7.37.5"
     identity-obj-proxy: "npm:^3.0.0"
     jsdom: "npm:^26.1.0"
+    jstreemap: "npm:^1.28.2"
     postcss: "npm:^8.5.3"
     postcss-preset-mantine: "npm:1.17.0"
     postcss-simple-vars: "npm:^7.0.1"
@@ -4564,7 +4572,6 @@ __metadata:
     storybook-dark-mode: "npm:^4.0.2"
     stylelint: "npm:^16.19.1"
     stylelint-config-standard-scss: "npm:^14.0.0"
-    ts-treemap: "npm:^1.1.0"
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.32.0"
     vite: "npm:^6.3.5"
@@ -6572,13 +6579,6 @@ __metadata:
   version: 2.2.0
   resolution: "ts-dedent@npm:2.2.0"
   checksum: 10c0/175adea838468cc2ff7d5e97f970dcb798bbcb623f29c6088cb21aa2880d207c5784be81ab1741f56b9ac37840cbaba0c0d79f7f8b67ffe61c02634cafa5c303
-  languageName: node
-  linkType: hard
-
-"ts-treemap@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "ts-treemap@npm:1.1.0"
-  checksum: 10c0/f2d29abe205d297e61e85f46dd169b0c855ff9d5110645a7e7cbfe4894751d7dd84d08891a0441160b96e8f595a2061bda82ddcb28d6d955b80cd184f08800ac
   languageName: node
   linkType: hard
 

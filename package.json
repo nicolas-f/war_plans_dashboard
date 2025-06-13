@@ -29,11 +29,11 @@
     "@tabler/icons-react": "^3.34.0",
     "@zip.js/zip.js": "^2.7.59",
     "dayjs": "^1.11.13",
+    "jstreemap": "^1.28.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.5.3",
-    "recharts": "2",
-    "ts-treemap": "^1.1.0"
+    "recharts": "2"
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",

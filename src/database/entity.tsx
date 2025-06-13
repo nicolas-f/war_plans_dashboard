@@ -28,12 +28,34 @@ export function getLocalizedDate(year: number, dayOfYear: number): string {
   });
 }
 
+/**
+ * Extracts a line of text from the given content starting at the specified index.
+ *
+ * @param {string} content - The text content to extract a line from.
+ * @param {number} index - The starting index within the content to extract the line.
+ * @return {[string, number]} A tuple where the first element is the extracted line
+ * and the second element is the index at the end of the line.
+ */
 export function extractLine(content: string, index: number) : [string, number] {
   let endOfLine = content.indexOf("\r\n", index)
   if(endOfLine === -1) {
     endOfLine = content.length
   }
   return [content.substring(index, endOfLine), endOfLine]
+}
+
+/**
+ * Extracts numeric float attributes from a given string.
+ *
+ * @param {string} line - The input string containing float values separated by whitespace.
+ * @return {number[]} An array of parsed float numbers from the input string, excluding invalid or NaN values.
+ */
+export function getFloatAttributes(line: string): number[] {
+  return line
+    .trim()
+    .split(/\s+/)
+    .map((value) => parseFloat(value))
+    .filter((value) => !isNaN(value));
 }
 
 /**
