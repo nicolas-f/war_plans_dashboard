@@ -1,5 +1,3 @@
-import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
-
 ;
 /*
  * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
@@ -17,11 +15,12 @@ import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.typ
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { Autocomplete, Slider, Stack, Table, NumberInput } from '@mantine/core';
+import { useState } from 'react';
+import { Select , NumberInput, Slider, Stack, Table } from '@mantine/core';
+import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
-import { useState } from 'react';
 
 
 export interface ProductionGameContentProps {
@@ -30,13 +29,19 @@ export interface ProductionGameContentProps {
   selectedLanguage: string;
 }
 
-const elements = [
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-];
+
+class ProductionTableRow {
+  building: Entity;
+  productivity: number;
+  setProductivity: (value: number) => void;
+  quantity: string | number;
+  setQuantity: (value: string | number) => void;
+  constructor(building : Entity,) {
+    this.building = building;
+    [this.productivity, this.setProductivity] = useState(100);
+    [this.quantity, this.setQuantity] = useState<string | number>(1);
+  }
+}
 
 export function ProductionGameContent({
                                         gameDatabase,
@@ -64,18 +69,22 @@ export function ProductionGameContent({
       buildingSelectionData[index].items.push(comboboxItem)
     }
   })
+  const buildings : ProductionTableRow[] = [];
 
-
-  const rows = elements.map((element) => (
-  <Table.Tr key={element.name}>
+  const rows = buildings.map((element, index) => (
+  <Table.Tr key={index}>
     <Table.Td>
-      {element.name}
+      {element.building.getLocalizedNameIndex() > 0 ?
+        gameDatabase.getLang(selectedLanguage, element.building.getLocalizedNameIndex())
+        : element.building.name}
     </Table.Td>
     <Table.Td>
       <Slider
         w="120px"
         min={0}
         max={100}
+        value={element.productivity}
+        onChange={element.setProductivity}
         defaultValue={100}
         marks={[
           { value: 0, label: '0%' },
@@ -84,21 +93,29 @@ export function ProductionGameContent({
         ]}
       /></Table.Td>
     <Table.Td>
-      <NumberInput value={1} min={1} w="80px" />
+      <NumberInput onChange={element.setQuantity} value={element.quantity} min={1} w="80px" />
     </Table.Td>
-    <Table.Td>{element.position}</Table.Td>
+    <Table.Td>0</Table.Td>
   </Table.Tr>
 ));
 
   return (
     <Stack>
-      <Autocomplete
+      <Select
+        searchable
         label={gameDatabase.getLang(selectedLanguage, 40003)}
         placeholder={gameDatabase.getLang(selectedLanguage, 13900)}
         // limit={5}
         data={buildingSelectionData}
         value={selectedBuilding}
-        onChange={(value) => setSelectedBuilding(value)}
+        onChange={(value, option) => {
+          const entity = gameDatabase.entities.get(option.value);
+          console.log(option.value)
+          if (entity) {
+            buildings.push(new ProductionTableRow(entity));
+            console.log(buildings)
+          }
+        }}
       />
       <Table>
         <Table.Thead>
