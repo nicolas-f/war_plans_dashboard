@@ -1,4 +1,3 @@
-;
 /*
  * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
@@ -25,7 +24,6 @@ import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
 
-
 export interface ProductionGameContentProps {
   gameDatabase: GameDatabase;
   saveGameDatabase: SaveGameDatabase;
@@ -48,27 +46,44 @@ function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: Sa
                                 selectedLanguage: string, buildings: ProductionTableRow[], datePrice: string | null): React.ReactNode[][] {
   const result: React.ReactNode[][] = [];
   const resources = new Map<string, number>();
+  const exchangePriceRubles = new Map<string, number>();
+  const exchangePriceDollars = new Map<string, number>();
   const productionDate = dayjs(datePrice)
-
-  // fetch all production and consumption numbers for all resources and all listed buildings
-  buildings.forEach((element) => {
-    const buildingEntity = gameDatabase.entities.get(element.building)
-    if (typeof element.quantity === 'number' && typeof element.productivity === 'number') {
-      const numberOfBuildings: number = element.quantity;
-      const productivityBuildings: number = element.productivity;
-      if (buildingEntity) {
-        buildingEntity.getProduction(productionDate.year()).forEach(({resource, quantity}) => {
-          const totalQuantity = quantity * numberOfBuildings * ( buildingEntity.getMaximumWorkers() * productivityBuildings / 100);
-          resources.set(resource, (resources.get(resource) || 0) + totalQuantity)
-        })
-        buildingEntity.getConsumption(productionDate.year()).forEach(({resource, quantity}) => {
-          const totalQuantity = quantity * ( buildingEntity.getMaximumWorkers() *productivityBuildings / 100);
-          resources.set(resource, (resources.get(resource) || 0) - totalQuantity)
-        })
+  const saveGameIndex = saveGameDatabase.dateIndex.lowerBound(productionDate.valueOf());
+  if(saveGameIndex.value) {
+    // fetch all production and consumption numbers for all resources and all listed buildings
+    buildings.forEach((element) => {
+      const buildingEntity = gameDatabase.entities.get(element.building)
+      if (typeof element.quantity === 'number' && typeof element.productivity === 'number') {
+        const numberOfBuildings: number = element.quantity;
+        const productivityBuildings: number = element.productivity;
+        if (buildingEntity) {
+          buildingEntity.getProduction(productionDate.year()).forEach(({resource, quantity}) => {
+            const totalQuantity = quantity * numberOfBuildings * ( buildingEntity.getMaximumWorkers() * productivityBuildings / 100);
+            resources.set(resource, (resources.get(resource) || 0) + totalQuantity)
+          })
+          buildingEntity.getConsumption(productionDate.year()).forEach(({resource, quantity}) => {
+            const totalQuantity = quantity * numberOfBuildings * ( buildingEntity.getMaximumWorkers() *productivityBuildings / 100);
+            resources.set(resource, (resources.get(resource) || 0) - totalQuantity)
+          })
+        }
       }
-    }
-  })
-  console.log(resources)
+    })
+    resources.forEach((value, key) => {
+      if(value >= 0) {
+        const exportPriceRuble = saveGameDatabase.getData(["$Economy_SellCostRUB", key], saveGameIndex.value)[0]
+        const exportPriceDollar = saveGameDatabase.getData(["$Economy_SellCostUSD", key], saveGameIndex.value)[0]
+        exchangePriceRubles.set(key, exportPriceRuble * value)
+        exchangePriceDollars.set(key, exportPriceDollar * value)
+      } else {
+        const importPriceRuble = saveGameDatabase.getData(["$Economy_PurchaseCostRUB", key], saveGameIndex.value)[0]
+        const importPriceDollar = saveGameDatabase.getData(["$Economy_PurchaseCostUSD", key], saveGameIndex.value)[0]
+        exchangePriceRubles.set(key, importPriceRuble * value)
+        exchangePriceDollars.set(key, importPriceDollar * value)
+      }
+    })
+    console.log(resources, exchangePriceRubles, exchangePriceDollars)
+  }
   return result
 }
 
@@ -76,10 +91,16 @@ export function ProductionGameContent({
                                         gameDatabase,
                                         saveGameDatabase,
                                         selectedLanguage,
-                                      }: ProductionGameContentProps) {  const lastEntry = saveGameDatabase.dateIndex.last();
+                                      }: ProductionGameContentProps) {
+  const lastEntry = saveGameDatabase.dateIndex.last();
+  const firstEntry = saveGameDatabase.dateIndex.first();
   let initialEndDate: string | null = null;
+  let minStartDate: string | null = null;
+  let maxEndDate: string | null = null;
   if (lastEntry) {
     initialEndDate = dayjs(lastEntry[0]).format('YYYY-MM-DD');
+    maxEndDate = initialEndDate
+    minStartDate = dayjs(firstEntry[0]).format('YYYY-MM-DD');
   }
   const [buildings, setBuildings] = useState<ProductionTableRow[]>([]);
   const [priceDate, setPriceDate] = useState<string | null>(initialEndDate);
@@ -182,6 +203,8 @@ export function ProductionGameContent({
         <DatePickerInput
           label={gameDatabase.getLang(selectedLanguage, 612)}
           value={priceDate}
+          minDate={minStartDate ? minStartDate : undefined}
+          maxDate={maxEndDate ? maxEndDate : undefined}
           onChange={setPriceDate}
         />
         <Select
@@ -191,16 +214,16 @@ export function ProductionGameContent({
           placeholder={gameDatabase.getLang(selectedLanguage, 13900)}
           // limit={5}
           data={buildingSelectionData}
-          onChange={(value, option) => {
+          onChange={(_value, option) => {
             const entity = gameDatabase.entities.get(option.value);
             if (entity) {
-              setBuildings([...buildings ,new ProductionTableRow(option.value)]);
+              setBuildings([...buildings, new ProductionTableRow(option.value)]);
             }
           }}
         />
       </Group>
-      <Table data={buildingsTableData} captionSide="top"/>
-      <Table data={resourcesTableData} captionSide="top"/>
+      <Table data={buildingsTableData} captionSide="top" />
+      <Table data={resourcesTableData} captionSide="top" />
     </Stack>
   );
 }

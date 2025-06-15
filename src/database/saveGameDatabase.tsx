@@ -31,6 +31,15 @@ export class SaveGameDatabase {
 
   currentStateIndex = 0
 
+  getData(keyTree:string[], fromIndex : number): number[] {
+    let location = fromIndex
+    for(const key of keyTree) {
+      location = this.statistics.indexOf(key, location)
+    }
+    const line = extractLine(this.statistics, location)
+    return getFloatAttributes(line[0])
+  }
+
   /**
    * Fetch data for a specific item
    * @param category Statistic category ex: Economy Resources Citizens etc..
