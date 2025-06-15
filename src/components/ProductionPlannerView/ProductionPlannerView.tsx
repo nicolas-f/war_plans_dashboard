@@ -1,4 +1,3 @@
-;
 /*
  * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
@@ -16,11 +15,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { useState } from 'react';
-import { Select , NumberInput, Slider, Stack, Table } from '@mantine/core';
+import { IconCross, IconRowRemove } from '@tabler/icons-react';
+import { ActionIcon, Box, NumberInput, Select, Slider, Stack, Table, TableData } from '@mantine/core';
 import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
+
+
+;
+
+
+
+
+
+
+
 
 
 export interface ProductionGameContentProps {
@@ -31,15 +41,13 @@ export interface ProductionGameContentProps {
 
 
 class ProductionTableRow {
-  building: Entity;
+  building: string;
   productivity: number;
-  setProductivity: (value: number) => void;
   quantity: string | number;
-  setQuantity: (value: string | number) => void;
-  constructor(building : Entity,) {
+  constructor(building : string) {
     this.building = building;
-    [this.productivity, this.setProductivity] = useState(100);
-    [this.quantity, this.setQuantity] = useState<string | number>(1);
+    this.productivity = 100;
+    this.quantity = 1;
   }
 }
 
@@ -50,7 +58,6 @@ export function ProductionGameContent({
                                       }: ProductionGameContentProps) {
   // Generate building search data
   const buildingSelectionData: { group: string; items: ComboboxItem[] }[] = [];
-  const [selectedBuilding, setSelectedBuilding] = useState('');
   gameDatabase.entities.entries()
     .filter(value => value[1].getLocalizedNameIndex() > 0 && (value[1].getMaximumWorkers() > 0 || value[1].getLivingPopulation() > 0))
     .forEach((value: [string, Entity]) => {
@@ -69,65 +76,62 @@ export function ProductionGameContent({
       buildingSelectionData[index].items.push(comboboxItem)
     }
   })
-  const buildings : ProductionTableRow[] = [];
+  const [buildings, setBuildings] = useState<ProductionTableRow[]>([]);
 
-  const rows = buildings.map((element, index) => (
-  <Table.Tr key={index}>
-    <Table.Td>
-      {element.building.getLocalizedNameIndex() > 0 ?
-        gameDatabase.getLang(selectedLanguage, element.building.getLocalizedNameIndex())
-        : element.building.name}
-    </Table.Td>
-    <Table.Td>
-      <Slider
-        w="120px"
-        min={0}
-        max={100}
-        value={element.productivity}
-        onChange={element.setProductivity}
-        defaultValue={100}
-        marks={[
-          { value: 0, label: '0%' },
-          { value: 50, label: '50%' },
-          { value: 100, label: '100%' },
-        ]}
-      /></Table.Td>
-    <Table.Td>
-      <NumberInput onChange={element.setQuantity} value={element.quantity} min={1} w="80px" />
-    </Table.Td>
-    <Table.Td>0</Table.Td>
-  </Table.Tr>
-));
+  const rows = buildings.map((element) => [
+    <ActionIcon
+      variant="filled"
+      onClick={() => setBuildings(buildings.filter((a) => a !== element))}
+    >
+      <IconRowRemove />
+    </ActionIcon>,
+    gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
+      ? gameDatabase.getLang(selectedLanguage, gameDatabase.entities.get(element.building)!.getLocalizedNameIndex())
+      : gameDatabase.entities.get(element.building)!.name,
+    <Slider
+      w="120px"
+      min={0}
+      max={100}
+      defaultValue={100}
+      step={10}
+      onChange={(v) => {
+        element.productivity = v;
+      }}
+      marks={[
+        { value: 0, label: '0%' },
+        { value: 50, label: '50%' },
+        { value: 100, label: '100%' },
+      ]}
+    />,
+    <NumberInput min={1} w="80px" defaultValue={1} />,
+  ]);
+
+  const tableData: TableData = {
+    head: ["",
+      gameDatabase.getLang(selectedLanguage, 13900),
+      gameDatabase.getLang(selectedLanguage, 8090),
+      'Quantity'],
+    body: rows,
+  };
 
   return (
     <Stack>
       <Select
+        w={320}
         searchable
+        clearable
         label={gameDatabase.getLang(selectedLanguage, 40003)}
         placeholder={gameDatabase.getLang(selectedLanguage, 13900)}
         // limit={5}
         data={buildingSelectionData}
-        value={selectedBuilding}
         onChange={(value, option) => {
           const entity = gameDatabase.entities.get(option.value);
-          console.log(option.value)
           if (entity) {
-            buildings.push(new ProductionTableRow(entity));
-            console.log(buildings)
+            setBuildings([...buildings ,new ProductionTableRow(option.value)]);
           }
         }}
       />
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>{gameDatabase.getLang(selectedLanguage, 13900)}</Table.Th>
-            <Table.Th>{gameDatabase.getLang(selectedLanguage, 8090)}</Table.Th>
-            <Table.Th>Quantity</Table.Th>
-            <Table.Th>Atomic mass</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
+      <Table data={tableData} />
     </Stack>
   );
 }
