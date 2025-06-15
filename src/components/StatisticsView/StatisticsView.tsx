@@ -163,7 +163,7 @@ export function StatisticsView({
       </Text>
       <Tabs defaultValue="prices">
         <Tabs.List>
-          <Tabs.Tab value="prices" leftSection={<IconCurrencyRubel size={12} />}>
+          <Tabs.Tab value="prices" leftSection={<IconCurrencyRubel size={24} />}>
             {gameDatabase.getLang(selectedLanguage, 2130)}
           </Tabs.Tab>
         </Tabs.List>
@@ -178,5 +178,4 @@ export function StatisticsView({
       </Tabs>
     </Stack>
   );
-  //return (<PriceChartData gameDatabase={gameDatabase} saveGameDatabase={saveGameDatabase} selectedLanguage={selectedLanguage} />);
 }
