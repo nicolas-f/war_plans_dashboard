@@ -17,12 +17,13 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { IconRowRemove } from '@tabler/icons-react';
-import { ActionIcon, Group, NumberInput, Select, Stack, Table, TableData } from '@mantine/core';
+import { ActionIcon, Group, NumberInput, Select, Stack, Table, TableData, Text } from '@mantine/core';
 import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { DatePickerInput } from '@mantine/dates';
 import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
+import { resourcesLangIndex } from '@/database/dataMap';
 
 export interface ProductionGameContentProps {
   gameDatabase: GameDatabase;
@@ -44,10 +45,7 @@ class ProductionTableRow {
 
 function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: SaveGameDatabase,
                                 selectedLanguage: string, buildings: ProductionTableRow[], datePrice: string | null): React.ReactNode[][] {
-  const result: React.ReactNode[][] = [];
   const resources = new Map<string, number>();
-  const exchangePriceRubles = new Map<string, number>();
-  const exchangePriceDollars = new Map<string, number>();
   const productionDate = dayjs(datePrice)
   const saveGameIndex = saveGameDatabase.dateIndex.lowerBound(productionDate.valueOf());
   if(saveGameIndex.value) {
@@ -69,22 +67,20 @@ function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: Sa
         }
       }
     })
-    resources.forEach((value, key) => {
-      if(value >= 0) {
-        const exportPriceRuble = saveGameDatabase.getData(["$Economy_SellCostRUB", key], saveGameIndex.value)[0]
-        const exportPriceDollar = saveGameDatabase.getData(["$Economy_SellCostUSD", key], saveGameIndex.value)[0]
-        exchangePriceRubles.set(key, exportPriceRuble * value)
-        exchangePriceDollars.set(key, exportPriceDollar * value)
-      } else {
-        const importPriceRuble = saveGameDatabase.getData(["$Economy_PurchaseCostRUB", key], saveGameIndex.value)[0]
-        const importPriceDollar = saveGameDatabase.getData(["$Economy_PurchaseCostUSD", key], saveGameIndex.value)[0]
-        exchangePriceRubles.set(key, importPriceRuble * value)
-        exchangePriceDollars.set(key, importPriceDollar * value)
-      }
+    return resources.entries().map(([key, value]) => {
+      const gainRubles = value >= 0 ? saveGameDatabase.getData(["$Economy_SellCostRUB", key], saveGameIndex.value)[0] * value :
+        saveGameDatabase.getData(["$Economy_PurchaseCostRUB", key], saveGameIndex.value)[0] * value
+      const gainDollars = value >= 0 ? saveGameDatabase.getData(["$Economy_SellCostUSD", key], saveGameIndex.value)[0] * value :
+        saveGameDatabase.getData(["$Economy_PurchaseCostUSD", key], saveGameIndex.value)[0] * value
+
+      return [
+        <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(key))}</Text>,
+        <Text c={value >= 0 ? 'blue' : 'red'}>{value.toFixed(2)}</Text>,
+        <Text c={value >= 0 ? 'blue' : 'red'}>{gainRubles.toFixed(2)}</Text>,
+        <Text c={value >= 0 ? 'blue' : 'red'}>{gainDollars.toFixed(2)}</Text>
+      ]
     })
-    console.log(resources, exchangePriceRubles, exchangePriceDollars)
   }
-  return result
 }
 
 export function ProductionGameContent({
@@ -104,9 +100,6 @@ export function ProductionGameContent({
   }
   const [buildings, setBuildings] = useState<ProductionTableRow[]>([]);
   const [priceDate, setPriceDate] = useState<string | null>(initialEndDate);
-  const [resourcesProduction, setResourcesProduction] = useState<React.ReactNode[][]>(
-    getResourcesProduction(gameDatabase, saveGameDatabase, selectedLanguage, buildings, priceDate));
-
 
   // Generate building search data
   const buildingSelectionData: { group: string; items: ComboboxItem[] }[] = [];
@@ -151,12 +144,13 @@ export function ProductionGameContent({
       >
         <IconRowRemove />
       </ActionIcon>,
-      gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
+      <Text>{gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
         ? gameDatabase.getLang(
             selectedLanguage,
             gameDatabase.entities.get(element.building)!.getLocalizedNameIndex()
           )
-        : gameDatabase.entities.get(element.building)!.name,
+        : gameDatabase.entities.get(element.building)!.name}
+      </Text>,
       <NumberInput
         min={10}
         max={100}
@@ -190,7 +184,7 @@ export function ProductionGameContent({
       '₽',
       '$'
     ],
-    body: resourcesProduction,
+    body: getResourcesProduction(gameDatabase, saveGameDatabase, selectedLanguage, buildings, priceDate),
   };
 
 

@@ -117,8 +117,8 @@
     &[data-active] {
         &,
         &:hover {
-            border-left-color: var(--mantine-color-blue-filled);
-            background-color: var(--mantine-color-blue-filled);
+            border-left-color: var(--mantine-primary-color-5);
+            background-color: light-dark(var(--mantine-primary-color-filled-hover));
             color: var(--mantine-color-white);
         }
     }

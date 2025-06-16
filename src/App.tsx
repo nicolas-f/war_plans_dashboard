@@ -17,6 +17,7 @@
 
 import '@mantine/core/styles.css';
 import '@mantine/dropzone/styles.css';
+import { mantineTheme } from '@/theme';
 
 import React, { useState } from 'react';
 import {
@@ -39,7 +40,6 @@ import {
   LoadingOverlay,
   MantineProvider,
   NativeSelect,
-  Notification,
   Space,
   useComputedColorScheme,
   useMantineColorScheme,
@@ -161,7 +161,7 @@ export default function App() {
   }
 
   return (
-    <MantineProvider defaultColorScheme="dark">
+    <MantineProvider defaultColorScheme="dark" theme={mantineTheme} >
       <Box pos="relative">
         <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
         <AppShell
