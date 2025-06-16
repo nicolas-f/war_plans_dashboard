@@ -43,8 +43,51 @@ class ProductionTableRow {
   }
 }
 
+function getBuildingsDataTable(gameDatabase: GameDatabase, selectedLanguage: string,
+                               buildings: ProductionTableRow[],
+                               setBuildings: (buildings: ProductionTableRow[]) => void) {
+  return buildings.map((element) => [
+    <ActionIcon
+      variant="filled"
+      onClick={() => setBuildings(buildings.filter((a) => a !== element))}
+    >
+      <IconRowRemove />
+    </ActionIcon>,
+    <Text>{gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
+      ? gameDatabase.getLang(
+        selectedLanguage,
+        gameDatabase.entities.get(element.building)!.getLocalizedNameIndex()
+      )
+      : gameDatabase.entities.get(element.building)!.name}
+    </Text>,
+    <NumberInput
+      min={10}
+      max={100}
+      suffix=" %"
+      step={10}
+      w="80px"
+      value={element.productivity}
+      onChange={(productivity) => {
+        setBuildings(
+          buildings.map((a) => (a.building === element.building ? { ...a, productivity} : a))
+        );
+      }}
+    />,
+    <NumberInput
+      min={1}
+      w="80px"
+      value={element.quantity}
+      onChange={(quantity) => {
+        setBuildings(
+          buildings.map((a) => (a.building === element.building ? { ...a, quantity } : a))
+        );
+      }}
+    />,
+  ])
+}
+
 function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: SaveGameDatabase,
-                                selectedLanguage: string, buildings: ProductionTableRow[], datePrice: string | null): React.ReactNode[][] {
+                                selectedLanguage: string, buildings: ProductionTableRow[], datePrice: string | null) {
   const resources = new Map<string, number>();
   const productionDate = dayjs(datePrice)
   const saveGameIndex = saveGameDatabase.dateIndex.lowerBound(productionDate.valueOf());
@@ -79,7 +122,7 @@ function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: Sa
         <Text c={value >= 0 ? 'blue' : 'red'}>{gainRubles.toFixed(2)}</Text>,
         <Text c={value >= 0 ? 'blue' : 'red'}>{gainDollars.toFixed(2)}</Text>
       ]
-    })
+    }).toArray()
   }
 }
 
@@ -137,44 +180,7 @@ export function ProductionGameContent({
       gameDatabase.getLang(selectedLanguage, 8090),
       gameDatabase.getLang(selectedLanguage,8068)
     ],
-    body: buildings.map((element) => [
-      <ActionIcon
-        variant="filled"
-        onClick={() => setBuildings(buildings.filter((a) => a !== element))}
-      >
-        <IconRowRemove />
-      </ActionIcon>,
-      <Text>{gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
-        ? gameDatabase.getLang(
-            selectedLanguage,
-            gameDatabase.entities.get(element.building)!.getLocalizedNameIndex()
-          )
-        : gameDatabase.entities.get(element.building)!.name}
-      </Text>,
-      <NumberInput
-        min={10}
-        max={100}
-        suffix=" %"
-        step={10}
-        w="80px"
-        value={element.productivity}
-        onChange={(productivity) => {
-          setBuildings(
-            buildings.map((a) => (a.building === element.building ? { ...a, productivity} : a))
-          );
-        }}
-      />,
-      <NumberInput
-        min={1}
-        w="80px"
-        value={element.quantity}
-        onChange={(quantity) => {
-          setBuildings(
-            buildings.map((a) => (a.building === element.building ? { ...a, quantity } : a))
-          );
-        }}
-      />,
-    ]),
+    body: getBuildingsDataTable(gameDatabase, selectedLanguage, buildings, setBuildings),
   };
 
   const resourcesTableData: TableData = {

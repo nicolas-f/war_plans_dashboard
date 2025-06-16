@@ -23,7 +23,10 @@ export class GameDatabase {
   entities: Map<string, Entity> = new Map<string, Entity>();
   translations: Map<string, Map<number, string>> = new Map<string, Map<number, string>>()
 
-  getLang(language : string, key : number, defaultValue: string = "") : string {
+  getLang(language : string, key : number | undefined, defaultValue: string = "") : string {
+    if(!key) {
+      return defaultValue
+    }
     const lang = this.translations.get(language)?.get(key)
     if(lang) {
       return lang
