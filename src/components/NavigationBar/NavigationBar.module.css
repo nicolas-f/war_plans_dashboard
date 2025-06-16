@@ -118,7 +118,7 @@
         &,
         &:hover {
             border-left-color: var(--mantine-primary-color-5);
-            background-color: light-dark(var(--mantine-primary-color-filled-hover));
+            background-color: light-dark(var(--mantine-primary-color-7));
             color: var(--mantine-color-white);
         }
     }

@@ -17,7 +17,7 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { IconRowRemove } from '@tabler/icons-react';
-import { ActionIcon, Group, NumberInput, Select, Stack, Table, TableData, Text } from '@mantine/core';
+import { ActionIcon, Group, NumberInput, Select, Stack, Table, TableData, Text, Tooltip } from '@mantine/core';
 import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { DatePickerInput } from '@mantine/dates';
 import { Entity } from '@/database/entity';
@@ -89,22 +89,28 @@ function getBuildingsDataTable(gameDatabase: GameDatabase, selectedLanguage: str
 function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: SaveGameDatabase,
                                 selectedLanguage: string, buildings: ProductionTableRow[], datePrice: string | null) {
   const resources = new Map<string, number>();
+  const resourceQuantityTooltip = new Map<string, string>();
   const productionDate = dayjs(datePrice)
   const saveGameIndex = saveGameDatabase.dateIndex.lowerBound(productionDate.valueOf());
   if(saveGameIndex.value) {
     // fetch all production and consumption numbers for all resources and all listed buildings
     buildings.forEach((element) => {
       const buildingEntity = gameDatabase.entities.get(element.building)
+      const buildingLabel = buildingEntity ? gameDatabase.getLang(selectedLanguage, buildingEntity.getLocalizedNameIndex()) : element.building;
       if (typeof element.quantity === 'number' && typeof element.productivity === 'number') {
         const numberOfBuildings: number = element.quantity;
         const productivityBuildings: number = element.productivity;
         if (buildingEntity) {
           buildingEntity.getProduction(productionDate.year()).forEach(({resource, quantity}) => {
             const totalQuantity = quantity * numberOfBuildings * ( buildingEntity.getMaximumWorkers() * productivityBuildings / 100);
+            const tooltip = `[${buildingLabel}: ${totalQuantity.toFixed(2)}] `
+            resourceQuantityTooltip.set(resource, (resourceQuantityTooltip.get(resource) || "") + tooltip)
             resources.set(resource, (resources.get(resource) || 0) + totalQuantity)
           })
           buildingEntity.getConsumption(productionDate.year()).forEach(({resource, quantity}) => {
             const totalQuantity = quantity * numberOfBuildings * ( buildingEntity.getMaximumWorkers() *productivityBuildings / 100);
+            const tooltip = `[${buildingLabel}: -${totalQuantity.toFixed(2)}] `
+            resourceQuantityTooltip.set(resource, (resourceQuantityTooltip.get(resource) || "") + tooltip)
             resources.set(resource, (resources.get(resource) || 0) - totalQuantity)
           })
         }
@@ -118,7 +124,7 @@ function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: Sa
 
       return [
         <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(key))}</Text>,
-        <Text c={value >= 0 ? 'blue' : 'red'}>{value.toFixed(2)}</Text>,
+        <Tooltip multiline label={resourceQuantityTooltip.get(key)}><Text c={value >= 0 ? 'blue' : 'red'}>{value.toFixed(2)}</Text></Tooltip>,
         <Text c={value >= 0 ? 'blue' : 'red'}>{gainRubles.toFixed(2)}</Text>,
         <Text c={value >= 0 ? 'blue' : 'red'}>{gainDollars.toFixed(2)}</Text>
       ]
