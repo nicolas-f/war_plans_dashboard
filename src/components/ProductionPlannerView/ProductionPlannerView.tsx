@@ -27,6 +27,7 @@ import {
   TableData,
   Text,
   Tooltip,
+  NumberFormatter
 } from '@mantine/core';
 import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { DatePickerInput } from '@mantine/dates';
@@ -168,10 +169,10 @@ function getResourcesProduction(
         return [
           <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(key))}</Text>,
           <Tooltip multiline label={resourceQuantityTooltip.get(key)}>
-            <Text c={value >= 0 ? 'blue' : 'red'}>{value.toFixed(2)}</Text>
+            <Text c={value >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' '+gameDatabase.getLang(selectedLanguage, 70059)} decimalScale={1} value={value} thousandSeparator /></Text>
           </Tooltip>,
-          <Text c={value >= 0 ? 'blue' : 'red'}>{gainRubles.toFixed(2)}</Text>,
-          <Text c={value >= 0 ? 'blue' : 'red'}>{gainDollars.toFixed(2)}</Text>,
+          <Text c={value >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' ₽'} decimalScale={2} value={gainRubles} thousandSeparator /></Text>,
+          <Text c={value >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' $'} decimalScale={2} value={gainDollars} thousandSeparator /></Text>,
         ];
       })
       .toArray();
