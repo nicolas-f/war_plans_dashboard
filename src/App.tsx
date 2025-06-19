@@ -1,3 +1,4 @@
+;
 /*
  * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
@@ -17,48 +18,29 @@
 
 import '@mantine/core/styles.css';
 import '@mantine/dropzone/styles.css';
-import { mantineTheme } from '@/theme';
+
+
 
 import React, { useState } from 'react';
-import {
-  IconBuildingFactory2,
-  IconDatabase,
-  IconGraph,
-  IconMoon,
-  IconSettings,
-  IconSun,
-
-} from '@tabler/icons-react';
+import { IconBuildingFactory2, IconDatabase, IconGraph, IconMoon, IconSettings, IconSun } from '@tabler/icons-react';
 import savegameData from '/src/assets/data/default_save.zip?url';
 import gameData from '/src/assets/data/media_soviet.zip?url';
 import cx from 'clsx';
-import {
-  ActionIcon,
-  AppShell,
-  Box,
-  Group,
-  LoadingOverlay,
-  MantineProvider,
-  NativeSelect,
-  Space,
-  useComputedColorScheme,
-  useMantineColorScheme,
-} from '@mantine/core';
+import { FileWithPath } from 'react-dropzone';
+import { ActionIcon, AppShell, Box, Group, LoadingOverlay, MantineProvider, NativeSelect, Space, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
 import GameDataView from '@/components/GameDataView/GameDataView';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
+import { ProductionGameContent } from '@/components/ProductionPlannerView/ProductionPlannerView';
+import { SettingsView } from '@/components/SettingsView/SettingsView';
 import { StatisticsView } from '@/components/StatisticsView/StatisticsView';
+import { getStoreData, initDB, setStoreData, Stores } from '@/database/db';
 import { GameDatabase } from '@/database/gameDatabase';
-import { SaveGameDatabase } from '@/database/saveGameDatabase';
-import {
-  parseSaveGameIniFile,
-  parseSaveGameZipFileFromBlob,
-  parseSaveGameZipFileFromUrl,
-} from '@/features/parseSaveData';
+import { SaveGameDatabase, statisticsDbKey } from '@/database/saveGameDatabase';
+import { parseSaveGameIniFile, parseSaveGameZipFileFromBlob, parseSaveGameZipFileFromUrl } from '@/features/parseSaveData';
+import { mantineTheme } from '@/theme';
 import { parseZipFileFromUrl } from './features/parseGameData';
 import classes from './App.module.css';
-import {SettingsView} from "@/components/SettingsView/SettingsView";
-import { FileWithPath } from 'react-dropzone';
-import { ProductionGameContent } from '@/components/ProductionPlannerView/ProductionPlannerView';
+
 
 function DarkLightButton() {
   const { setColorScheme } = useMantineColorScheme();
@@ -88,6 +70,10 @@ export default function App() {
   const [gameDatabase, setGameDatabase] = useState(new GameDatabase());
   const [savegameDatabase, setSavegameDatabase] = useState(new SaveGameDatabase());
   const [selectedLanguage, setSelectedLanguage] = useState('English');
+
+  const handleInitDB = async () => {
+    await initDB();
+  };
 
   const pages = [
     {
@@ -122,6 +108,18 @@ export default function App() {
         await loadGameData();
         const elapsed = new Date().getTime() - start;
         console.log(`Game data loaded in ${elapsed} ms`);
+        await handleInitDB()
+        // check if the user have already uploaded a save game previously
+        const stats = await getStoreData<string>(Stores.pagesState, statisticsDbKey)
+        if(stats) {
+          const SAVE_GAMEDB = new SaveGameDatabase()
+          parseSaveGameIniFile(stats, SAVE_GAMEDB)
+          console.log(`read save game db :${stats.length} bytes`)
+          setSavegameDatabase(SAVE_GAMEDB);
+        } else {
+          const SAVE_GAME_DATABASE = await parseSaveGameZipFileFromUrl(savegameData);
+          setSavegameDatabase(SAVE_GAME_DATABASE);
+        }
       } finally {
         setLoading(false);
       }
@@ -129,11 +127,7 @@ export default function App() {
 
     const loadGameData = async () => {
       const GAME_DATABASE = await parseZipFileFromUrl(gameData);
-      const SAVE_GAME_DATABASE = await parseSaveGameZipFileFromUrl(savegameData);
-
       setGameDatabase(GAME_DATABASE);
-      setSavegameDatabase(SAVE_GAME_DATABASE);
-
     };
     loadDatabase();
   }, []);
@@ -145,13 +139,15 @@ export default function App() {
       const start = new Date().getTime();
       if(files[0].name.toLowerCase().endsWith('.zip')) {
         const arrayBuffer = await files[0].arrayBuffer();
-        const SAVE_GAME_DATABASE = await parseSaveGameZipFileFromBlob(new Blob([arrayBuffer]));
-        setSavegameDatabase(SAVE_GAME_DATABASE);
+        const saveGameDatabase = await parseSaveGameZipFileFromBlob(new Blob([arrayBuffer]));
+        setSavegameDatabase(saveGameDatabase);
+        setStoreData(Stores.pagesState, statisticsDbKey, saveGameDatabase.statistics)
       } else if(files[0].name.toLowerCase().endsWith('.ini')) {
         const saveGameDatabase = new SaveGameDatabase()
         const text = await files[0].text()
         parseSaveGameIniFile(text, saveGameDatabase)
         setSavegameDatabase(saveGameDatabase);
+        setStoreData(Stores.pagesState, statisticsDbKey, saveGameDatabase.statistics)
       }
       const elapsed = new Date().getTime() - start;
       console.log(`SaveGame data processed in ${elapsed} ms`);

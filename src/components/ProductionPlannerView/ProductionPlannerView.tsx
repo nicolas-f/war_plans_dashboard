@@ -17,13 +17,24 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { IconRowRemove } from '@tabler/icons-react';
-import { ActionIcon, Group, NumberInput, Select, Stack, Table, TableData, Text, Tooltip } from '@mantine/core';
+import {
+  ActionIcon,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  Table,
+  TableData,
+  Text,
+  Tooltip,
+} from '@mantine/core';
 import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { DatePickerInput } from '@mantine/dates';
+import { resourcesLangIndex } from '@/database/dataMap';
+import { getStoreData, setStoreData, Stores } from '@/database/db';
 import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
-import { resourcesLangIndex } from '@/database/dataMap';
 
 export interface ProductionGameContentProps {
   gameDatabase: GameDatabase;
@@ -31,21 +42,23 @@ export interface ProductionGameContentProps {
   selectedLanguage: string;
 }
 
-
 class ProductionTableRow {
   building: string;
   productivity: string | number;
   quantity: string | number;
-  constructor(building : string) {
+  constructor(building: string) {
     this.building = building;
     this.productivity = 100;
     this.quantity = 1;
   }
 }
 
-function getBuildingsDataTable(gameDatabase: GameDatabase, selectedLanguage: string,
-                               buildings: ProductionTableRow[],
-                               setBuildings: (buildings: ProductionTableRow[]) => void) {
+function getBuildingsDataTable(
+  gameDatabase: GameDatabase,
+  selectedLanguage: string,
+  buildings: ProductionTableRow[],
+  setBuildings: (buildings: ProductionTableRow[]) => void
+) {
   return buildings.map((element) => [
     <ActionIcon
       variant="filled"
@@ -53,12 +66,13 @@ function getBuildingsDataTable(gameDatabase: GameDatabase, selectedLanguage: str
     >
       <IconRowRemove />
     </ActionIcon>,
-    <Text>{gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
-      ? gameDatabase.getLang(
-        selectedLanguage,
-        gameDatabase.entities.get(element.building)!.getLocalizedNameIndex()
-      )
-      : gameDatabase.entities.get(element.building)!.name}
+    <Text>
+      {gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
+        ? gameDatabase.getLang(
+            selectedLanguage,
+            gameDatabase.entities.get(element.building)!.getLocalizedNameIndex()
+          )
+        : gameDatabase.entities.get(element.building)!.name}
     </Text>,
     <NumberInput
       min={10}
@@ -83,60 +97,94 @@ function getBuildingsDataTable(gameDatabase: GameDatabase, selectedLanguage: str
         );
       }}
     />,
-  ])
+  ]);
 }
 
-function getResourcesProduction(gameDatabase: GameDatabase, saveGameDatabase: SaveGameDatabase,
-                                selectedLanguage: string, buildings: ProductionTableRow[], datePrice: string | null) {
+function getResourcesProduction(
+  gameDatabase: GameDatabase,
+  saveGameDatabase: SaveGameDatabase,
+  selectedLanguage: string,
+  buildings: ProductionTableRow[],
+  datePrice: string | null
+) {
   const resources = new Map<string, number>();
   const resourceQuantityTooltip = new Map<string, string>();
-  const productionDate = dayjs(datePrice)
+  const productionDate = dayjs(datePrice);
   const saveGameIndex = saveGameDatabase.dateIndex.lowerBound(productionDate.valueOf());
-  if(saveGameIndex.value) {
+  if (saveGameIndex.value) {
     // fetch all production and consumption numbers for all resources and all listed buildings
     buildings.forEach((element) => {
-      const buildingEntity = gameDatabase.entities.get(element.building)
-      const buildingLabel = buildingEntity ? gameDatabase.getLang(selectedLanguage, buildingEntity.getLocalizedNameIndex()) : element.building;
+      const buildingEntity = gameDatabase.entities.get(element.building);
+      const buildingLabel = buildingEntity
+        ? gameDatabase.getLang(selectedLanguage, buildingEntity.getLocalizedNameIndex())
+        : element.building;
       if (typeof element.quantity === 'number' && typeof element.productivity === 'number') {
         const numberOfBuildings: number = element.quantity;
         const productivityBuildings: number = element.productivity;
         if (buildingEntity) {
-          buildingEntity.getProduction(productionDate.year()).forEach(({resource, quantity}) => {
-            const totalQuantity = quantity * numberOfBuildings * ( buildingEntity.getMaximumWorkers() * productivityBuildings / 100);
-            const tooltip = `[${buildingLabel}: ${totalQuantity.toFixed(2)}] `
-            resourceQuantityTooltip.set(resource, (resourceQuantityTooltip.get(resource) || "") + tooltip)
-            resources.set(resource, (resources.get(resource) || 0) + totalQuantity)
-          })
-          buildingEntity.getConsumption(productionDate.year()).forEach(({resource, quantity}) => {
-            const totalQuantity = quantity * numberOfBuildings * ( buildingEntity.getMaximumWorkers() *productivityBuildings / 100);
-            const tooltip = `[${buildingLabel}: -${totalQuantity.toFixed(2)}] `
-            resourceQuantityTooltip.set(resource, (resourceQuantityTooltip.get(resource) || "") + tooltip)
-            resources.set(resource, (resources.get(resource) || 0) - totalQuantity)
-          })
+          buildingEntity.getProduction(productionDate.year()).forEach(({ resource, quantity }) => {
+            const totalQuantity =
+              quantity *
+              numberOfBuildings *
+              ((buildingEntity.getMaximumWorkers() * productivityBuildings) / 100);
+            const tooltip = `[${buildingLabel}: ${totalQuantity.toFixed(2)}] `;
+            resourceQuantityTooltip.set(
+              resource,
+              (resourceQuantityTooltip.get(resource) || '') + tooltip
+            );
+            resources.set(resource, (resources.get(resource) || 0) + totalQuantity);
+          });
+          buildingEntity.getConsumption(productionDate.year()).forEach(({ resource, quantity }) => {
+            const totalQuantity =
+              quantity *
+              numberOfBuildings *
+              ((buildingEntity.getMaximumWorkers() * productivityBuildings) / 100);
+            const tooltip = `[${buildingLabel}: -${totalQuantity.toFixed(2)}] `;
+            resourceQuantityTooltip.set(
+              resource,
+              (resourceQuantityTooltip.get(resource) || '') + tooltip
+            );
+            resources.set(resource, (resources.get(resource) || 0) - totalQuantity);
+          });
         }
       }
-    })
-    return resources.entries().map(([key, value]) => {
-      const gainRubles = value >= 0 ? saveGameDatabase.getData(["$Economy_SellCostRUB", key], saveGameIndex.value)[0] * value :
-        saveGameDatabase.getData(["$Economy_PurchaseCostRUB", key], saveGameIndex.value)[0] * value
-      const gainDollars = value >= 0 ? saveGameDatabase.getData(["$Economy_SellCostUSD", key], saveGameIndex.value)[0] * value :
-        saveGameDatabase.getData(["$Economy_PurchaseCostUSD", key], saveGameIndex.value)[0] * value
+    });
+    return resources
+      .entries()
+      .map(([key, value]) => {
+        const gainRubles =
+          value >= 0
+            ? saveGameDatabase.getData(['$Economy_SellCostRUB', key], saveGameIndex.value)[0] *
+              value
+            : saveGameDatabase.getData(['$Economy_PurchaseCostRUB', key], saveGameIndex.value)[0] *
+              value;
+        const gainDollars =
+          value >= 0
+            ? saveGameDatabase.getData(['$Economy_SellCostUSD', key], saveGameIndex.value)[0] *
+              value
+            : saveGameDatabase.getData(['$Economy_PurchaseCostUSD', key], saveGameIndex.value)[0] *
+              value;
 
-      return [
-        <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(key))}</Text>,
-        <Tooltip multiline label={resourceQuantityTooltip.get(key)}><Text c={value >= 0 ? 'blue' : 'red'}>{value.toFixed(2)}</Text></Tooltip>,
-        <Text c={value >= 0 ? 'blue' : 'red'}>{gainRubles.toFixed(2)}</Text>,
-        <Text c={value >= 0 ? 'blue' : 'red'}>{gainDollars.toFixed(2)}</Text>
-      ]
-    }).toArray()
+        return [
+          <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(key))}</Text>,
+          <Tooltip multiline label={resourceQuantityTooltip.get(key)}>
+            <Text c={value >= 0 ? 'blue' : 'red'}>{value.toFixed(2)}</Text>
+          </Tooltip>,
+          <Text c={value >= 0 ? 'blue' : 'red'}>{gainRubles.toFixed(2)}</Text>,
+          <Text c={value >= 0 ? 'blue' : 'red'}>{gainDollars.toFixed(2)}</Text>,
+        ];
+      })
+      .toArray();
   }
 }
 
+const dbKey = 'ProductionTableRows';
+
 export function ProductionGameContent({
-                                        gameDatabase,
-                                        saveGameDatabase,
-                                        selectedLanguage,
-                                      }: ProductionGameContentProps) {
+  gameDatabase,
+  saveGameDatabase,
+  selectedLanguage,
+}: ProductionGameContentProps) {
   const lastEntry = saveGameDatabase.dateIndex.last();
   const firstEntry = saveGameDatabase.dateIndex.first();
   let initialEndDate: string | null = null;
@@ -144,11 +192,31 @@ export function ProductionGameContent({
   let maxEndDate: string | null = null;
   if (lastEntry) {
     initialEndDate = dayjs(lastEntry[0]).format('YYYY-MM-DD');
-    maxEndDate = initialEndDate
+    maxEndDate = initialEndDate;
     minStartDate = dayjs(firstEntry[0]).format('YYYY-MM-DD');
   }
   const [buildings, setBuildings] = useState<ProductionTableRow[]>([]);
   const [priceDate, setPriceDate] = useState<string | null>(initialEndDate);
+
+  React.useEffect(() => {
+    const loadIndexedDbEntries= async () => {
+      const dbBuildings = await getStoreData<ProductionTableRow[]>(Stores.pagesState, dbKey)
+      if (dbBuildings) {
+        setBuildings(dbBuildings)
+      }
+    };
+    loadIndexedDbEntries();
+  }, [])
+
+
+  React.useEffect(() => {
+    setStoreData(
+      Stores.pagesState,
+      dbKey,
+      buildings
+    );
+    console.log(`update database ${buildings}`)
+  }, [buildings])
 
   // Generate building search data
   const buildingSelectionData: { group: string; items: ComboboxItem[] }[] = [];
@@ -184,24 +252,27 @@ export function ProductionGameContent({
       '',
       gameDatabase.getLang(selectedLanguage, 13900),
       gameDatabase.getLang(selectedLanguage, 8090),
-      gameDatabase.getLang(selectedLanguage,8068)
+      gameDatabase.getLang(selectedLanguage, 8068),
     ],
     body: getBuildingsDataTable(gameDatabase, selectedLanguage, buildings, setBuildings),
   };
 
   const resourcesTableData: TableData = {
-    caption: gameDatabase.getLang(selectedLanguage,59000),
-    head: [gameDatabase.getLang(selectedLanguage, 70071),
+    caption: gameDatabase.getLang(selectedLanguage, 59000),
+    head: [
+      gameDatabase.getLang(selectedLanguage, 70071),
       gameDatabase.getLang(selectedLanguage, 8046),
       '₽',
-      '$'
+      '$',
     ],
-    body: getResourcesProduction(gameDatabase, saveGameDatabase, selectedLanguage, buildings, priceDate),
+    body: getResourcesProduction(
+      gameDatabase,
+      saveGameDatabase,
+      selectedLanguage,
+      buildings,
+      priceDate
+    ),
   };
-
-
-
-
 
   return (
     <Stack gap="xl">

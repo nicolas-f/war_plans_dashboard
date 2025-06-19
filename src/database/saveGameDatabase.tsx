@@ -18,6 +18,7 @@
 import { TreeMap, MapIterator } from 'jstreemap';
 import { extractLine, getFloatAttributes } from '@/database/entity';
 
+export const statisticsDbKey = 'statistics'
 
 export class SaveGameDatabase {
   /**
