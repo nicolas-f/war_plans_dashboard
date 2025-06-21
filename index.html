@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <style>
-      .loading-background {
-        background-color: #f0f0f0; /* Temporary color */
-      }
-      body {
-        transition: background-color 0.3s; /* Optional smooth transition */
-      }
-    </style>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/src/favicon.png" />
     <meta
@@ -17,13 +9,8 @@
     />
     <title>Workers And Resources - Soviet Republic - Dashboard</title>
   </head>
-  <body class="loading-background">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      window.addEventListener('load', function() {
-        document.body.classList.remove('loading-background');
-      });
-    </script>
   </body>
 </html>
