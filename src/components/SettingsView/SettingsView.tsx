@@ -47,7 +47,7 @@ export function SettingsView(props: DropzoneProps) {
 
         <div>
           <Text size="xl" inline>
-            Load you game save data into this tool, drag save game zip file or stats.ini here or click to select file
+            Load your game save data into this tool, drag save game zip file or stats.ini here or click to select file
           </Text>
         </div>
       </Group>
