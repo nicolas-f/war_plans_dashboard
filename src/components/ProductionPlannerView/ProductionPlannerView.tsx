@@ -44,8 +44,8 @@ interface resourceTableRow {
 
 class ProductionTableRow {
   building: string;
-  productivity: number;
-  quantity: number;
+  productivity: number | string;
+  quantity: number | string;
   constructor(building: string) {
     this.building = building;
     this.productivity = 100;
@@ -82,9 +82,9 @@ function getBuildingsDataTable(
       w="80px"
       value={element.productivity}
       onChange={(prod) => {
-        const newProd : number = typeof prod === 'number' ? prod : parseInt(prod.toString(), 10)
+        console.log(typeof prod)
         setBuildings(
-          buildings.map((a) => (a.building === element.building ? { ...a, newProd} : a))
+          buildings.map((a) => (a.building === element.building ? { ...a, productivity: prod} : a))
         );
       }}
     />,
@@ -93,9 +93,8 @@ function getBuildingsDataTable(
       w="80px"
       value={element.quantity}
       onChange={(quantity) => {
-        const newQuantity : number = typeof quantity === 'number' ? quantity : parseInt(quantity.toString(), 10)
         setBuildings(
-          buildings.map((a) => (a.building === element.building ? { ...a, newQuantity } : a))
+          buildings.map((a) => (a.building === element.building ? { ...a, quantity } : a))
         );
       }}
     />,
@@ -319,9 +318,10 @@ export function ProductionGameContent({
   };
 
   const totalWorkers = buildings.reduce((acc, building) => {
+    const buildingProductivity: number = building.productivity as number;
     return (
       acc +
-      building.productivity / 100.0 *
+      buildingProductivity / 100.0 *
         (gameDatabase.entities.get(building.building)?.getMaximumWorkers() || 0)
     );
   }, 0);
