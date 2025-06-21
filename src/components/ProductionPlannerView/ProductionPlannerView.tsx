@@ -302,6 +302,23 @@ export function ProductionGameContent({
       </Group>
       <Table data={buildingsTableData} captionSide="top" />
       <Table data={resourcesTableData} captionSide="top" />
+      <Table variant="vertical"  withTableBorder captionSide="top">
+        <Table.Caption>{gameDatabase.getLang(selectedLanguage, 1659)}</Table.Caption>
+        <Table.Tr>
+          <Table.Th w={150}>{gameDatabase.getLang(selectedLanguage, 585)}</Table.Th>
+          <Table.Td>0</Table.Td>
+        </Table.Tr>
+        <Table.Tr>
+          <Table.Th>{gameDatabase.getLang(selectedLanguage, 1501)}</Table.Th>
+          <Table.Td><Text c={500 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' ₽'} decimalScale={2} value={500} thousandSeparator /></Text></Table.Td>
+          <Table.Td><Text c={400 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' $'} decimalScale={2} value={400} thousandSeparator /></Text></Table.Td>
+        </Table.Tr>
+        <Table.Tr>
+          <Table.Th>{gameDatabase.getLang(selectedLanguage, 4114)}</Table.Th>
+          <Table.Td><Text c={50 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' ₽'} decimalScale={2} value={50} thousandSeparator /></Text></Table.Td>
+          <Table.Td><Text c={40 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' $'} decimalScale={2} value={40} thousandSeparator /></Text></Table.Td>
+        </Table.Tr>
+      </Table>
     </Stack>
   );
 }
