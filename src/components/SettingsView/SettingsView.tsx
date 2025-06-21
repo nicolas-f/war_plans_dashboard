@@ -17,7 +17,7 @@
 
 import { Dropzone, DropzoneProps } from '@mantine/dropzone';
 import { Group, Stack, Text } from '@mantine/core';
-import { IconFileZip, IconUpload, IconX } from '@tabler/icons-react';
+import { IconFileZip, IconUpload } from '@tabler/icons-react';
 import React from 'react';
 
 
@@ -39,7 +39,7 @@ export function SettingsView(props: DropzoneProps) {
           <IconUpload size={52} color="var(--mantine-color-blue-6)" stroke={1.5} />
         </Dropzone.Accept>
         <Dropzone.Reject>
-          <IconX size={52} color="var(--mantine-color-red-6)" stroke={1.5} />
+          <IconUpload size={52} color="var(--mantine-color-blue-6)" stroke={1.5} />
         </Dropzone.Reject>
         <Dropzone.Idle>
           <IconFileZip size={52} color="var(--mantine-color-dimmed)" stroke={1.5} />

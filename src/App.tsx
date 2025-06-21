@@ -22,12 +22,20 @@ import '@mantine/dropzone/styles.css';
 
 
 import React, { useState } from 'react';
-import { IconBuildingFactory2, IconDatabase, IconGraph, IconMoon, IconSettings, IconSun } from '@tabler/icons-react';
+import {
+  IconBuildingFactory2,
+  IconCheck,
+  IconDatabase,
+  IconGraph,
+  IconMoon,
+  IconSettings,
+  IconSun
+} from '@tabler/icons-react';
 import savegameData from '/src/assets/data/default_save.zip?url';
 import gameData from '/src/assets/data/media_soviet.zip?url';
 import cx from 'clsx';
 import { FileWithPath } from 'react-dropzone';
-import { ActionIcon, AppShell, Box, Group, LoadingOverlay, MantineProvider, NativeSelect, Space, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
+import { ActionIcon, AppShell, Box, Group, LoadingOverlay, MantineProvider, NativeSelect, Space, useComputedColorScheme, useMantineColorScheme, Notification } from '@mantine/core';
 import GameDataView from '@/components/GameDataView/GameDataView';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar';
 import { ProductionGameContent } from '@/components/ProductionPlannerView/ProductionPlannerView';
@@ -132,6 +140,8 @@ export default function App() {
     loadDatabase();
   }, []);
 
+  const [displayUploadedState, setDisplayUploadedState] = useState(false);
+
   async function onDropFile(files: FileWithPath[]) {
     if(files.length === 0) {return;}
     setSavegameLoading(true);
@@ -153,9 +163,11 @@ export default function App() {
       console.log(`SaveGame data processed in ${elapsed} ms`);
     } finally {
       setSavegameLoading(false);
+      setDisplayUploadedState(true);
     }
   }
 
+  const checkIcon = <IconCheck size={20} />;
   return (
     <MantineProvider defaultColorScheme="dark" theme={mantineTheme} >
       <Box pos="relative">
@@ -186,10 +198,18 @@ export default function App() {
             {(() => {
               switch (activePage) {
                 case 'settings':
-                  return <SettingsView
+                  return <><SettingsView
                     loading={savegameLoading}
                     onDrop={onDropFile}
-                    onReject={(files) => console.log('rejected files', files)}/>;
+                    onReject={(files) => console.log('rejected files', files)}/>
+                    {
+                      displayUploadedState &&
+                    <Notification icon={checkIcon} color="teal" title="All good!" mt="md">
+                      Save game data uploaded successfully !
+                    </Notification>
+                    }
+                  </>;
+
                 case 'gamedata':
                   return (
                     <GameDataView
