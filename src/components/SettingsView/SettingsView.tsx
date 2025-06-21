@@ -16,7 +16,7 @@
  */
 
 import { Dropzone, DropzoneProps } from '@mantine/dropzone';
-import { Group, Text } from '@mantine/core';
+import { Group, Stack, Text } from '@mantine/core';
 import { IconFileZip, IconUpload, IconX } from '@tabler/icons-react';
 import React from 'react';
 
@@ -24,6 +24,8 @@ import React from 'react';
 export function SettingsView(props: DropzoneProps) {
 
   return (
+    <Stack gap="xl"> <Text size="xl">Welcome to the Workers and Resources dashboard website.</Text>
+      <Text size="m">Please drag&drop your save game file in order to use your save game prices. It will be stored into your browser cache.</Text>
     <Dropzone
       accept={{
         'text/plain': ['.ini'], // All images
@@ -45,11 +47,12 @@ export function SettingsView(props: DropzoneProps) {
 
         <div>
           <Text size="xl" inline>
-            Drag save game zip file or stats.ini here or click to select file
+            Load you game save data into this tool, drag save game zip file or stats.ini here or click to select file
           </Text>
         </div>
       </Group>
     </Dropzone>
+    </Stack>
   );
 }
 

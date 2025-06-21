@@ -79,22 +79,22 @@ export default function App() {
     {
       id: 'settings',
       icon: IconSettings,
-      label: 'Settings',
+      label: gameDatabase.getLang(selectedLanguage, 1100, 'Settings'),
     },
     {
       id: 'gamedata',
       icon: IconDatabase,
-      label: 'Game & SaveGame Data',
+      label: gameDatabase.getLang(selectedLanguage, 8070, 'Game & SaveGame Data'),
     },
     {
       id: 'production',
       icon: IconBuildingFactory2,
-      label: 'Production',
+      label: gameDatabase.getLang(selectedLanguage, 1512, 'Production'),
     },
     {
       id: 'stats',
       icon: IconGraph,
-      label: 'Game statistics',
+      label: gameDatabase.getLang(selectedLanguage, 620, 'Game statistics'),
     },
   ];
 
