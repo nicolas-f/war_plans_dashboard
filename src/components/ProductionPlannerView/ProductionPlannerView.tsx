@@ -319,9 +319,10 @@ export function ProductionGameContent({
 
   const totalWorkers = buildings.reduce((acc, building) => {
     const buildingProductivity: number = building.productivity as number;
+    const buildingCount: number = building.quantity as number;
     return (
       acc +
-      buildingProductivity / 100.0 *
+      buildingProductivity / 100.0 * buildingCount *
         (gameDatabase.entities.get(building.building)?.getMaximumWorkers() || 0)
     );
   }, 0);
