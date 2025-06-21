@@ -88,14 +88,13 @@ function getBuildingsDataTable(
         : gameDatabase.entities.get(element.building)!.name}
     </Text>,
     <NumberInput
-      min={10}
+      min={0}
       max={100}
       suffix=" %"
       step={10}
       w="80px"
       value={element.productivity}
       onChange={(prod) => {
-        console.log(typeof prod)
         setBuildings(
           buildings.map((a) => (a.building === element.building ? { ...a, productivity: prod} : a))
         );
