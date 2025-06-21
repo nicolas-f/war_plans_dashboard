@@ -1,3 +1,4 @@
+;
 /*
  * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
@@ -17,18 +18,7 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { IconRowRemove } from '@tabler/icons-react';
-import {
-  ActionIcon,
-  Group,
-  NumberInput,
-  Select,
-  Stack,
-  Table,
-  TableData,
-  Text,
-  Tooltip,
-  NumberFormatter
-} from '@mantine/core';
+import { ActionIcon, Checkbox, Group, NumberFormatter, NumberInput, Select, Stack, Table, TableData, Text, Tooltip } from '@mantine/core';
 import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { DatePickerInput } from '@mantine/dates';
 import { resourcesLangIndex } from '@/database/dataMap';
@@ -37,16 +27,25 @@ import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
 
+
 export interface ProductionGameContentProps {
   gameDatabase: GameDatabase;
   saveGameDatabase: SaveGameDatabase;
   selectedLanguage: string;
 }
 
+interface resourceTableRow {
+  resource: string;
+  quantity: number;
+  quantityHint: string;
+  gainRubles: number;
+  gainDollars: number;
+}
+
 class ProductionTableRow {
   building: string;
-  productivity: string | number;
-  quantity: string | number;
+  productivity: number;
+  quantity: number;
   constructor(building: string) {
     this.building = building;
     this.productivity = 100;
@@ -82,9 +81,10 @@ function getBuildingsDataTable(
       step={10}
       w="80px"
       value={element.productivity}
-      onChange={(productivity) => {
+      onChange={(prod) => {
+        const newProd : number = typeof prod === 'number' ? prod : parseInt(prod.toString(), 10)
         setBuildings(
-          buildings.map((a) => (a.building === element.building ? { ...a, productivity} : a))
+          buildings.map((a) => (a.building === element.building ? { ...a, newProd} : a))
         );
       }}
     />,
@@ -93,8 +93,9 @@ function getBuildingsDataTable(
       w="80px"
       value={element.quantity}
       onChange={(quantity) => {
+        const newQuantity : number = typeof quantity === 'number' ? quantity : parseInt(quantity.toString(), 10)
         setBuildings(
-          buildings.map((a) => (a.building === element.building ? { ...a, quantity } : a))
+          buildings.map((a) => (a.building === element.building ? { ...a, newQuantity } : a))
         );
       }}
     />,
@@ -107,7 +108,7 @@ function getResourcesProduction(
   selectedLanguage: string,
   buildings: ProductionTableRow[],
   datePrice: string | null
-) {
+): resourceTableRow[] {
   const resources = new Map<string, number>();
   const resourceQuantityTooltip = new Map<string, string>();
   const productionDate = dayjs(datePrice);
@@ -166,17 +167,18 @@ function getResourcesProduction(
             : saveGameDatabase.getData(['$Economy_PurchaseCostUSD', key], saveGameIndex.value)[0] *
               value;
 
-        return [
-          <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(key))}</Text>,
-          <Tooltip multiline label={resourceQuantityTooltip.get(key)}>
-            <Text c={value >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' '+gameDatabase.getLang(selectedLanguage, 70059)} decimalScale={1} value={value} thousandSeparator /></Text>
-          </Tooltip>,
-          <Text c={value >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' ₽'} decimalScale={2} value={gainRubles} thousandSeparator /></Text>,
-          <Text c={value >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' $'} decimalScale={2} value={gainDollars} thousandSeparator /></Text>,
-        ];
+        return {
+          resource : key,
+          quantity: value,
+          quantityHint: resourceQuantityTooltip.get(key) || '',
+          gainRubles,
+          gainDollars,
+        }
       })
       .toArray();
-  }
+  } 
+    return [];
+  
 }
 
 const dbKey = 'ProductionTableRows';
@@ -198,6 +200,14 @@ export function ProductionGameContent({
   }
   const [buildings, setBuildings] = useState<ProductionTableRow[]>([]);
   const [priceDate, setPriceDate] = useState<string | null>(initialEndDate);
+  const [ignoredResources, setIgnoredResources] = useState<string[]>([]);
+  const producedResourceData : resourceTableRow[] =  getResourcesProduction(
+    gameDatabase,
+    saveGameDatabase,
+    selectedLanguage,
+    buildings,
+    priceDate
+  )
 
   React.useEffect(() => {
     const loadIndexedDbEntries= async () => {
@@ -250,7 +260,7 @@ export function ProductionGameContent({
   const buildingsTableData: TableData = {
     caption: gameDatabase.getLang(selectedLanguage, 59008),
     head: [
-      '',
+      gameDatabase.getLang(selectedLanguage,40095),
       gameDatabase.getLang(selectedLanguage, 13900),
       gameDatabase.getLang(selectedLanguage, 8090),
       gameDatabase.getLang(selectedLanguage, 8068),
@@ -260,20 +270,53 @@ export function ProductionGameContent({
 
   const resourcesTableData: TableData = {
     caption: gameDatabase.getLang(selectedLanguage, 59000),
-    head: [
+    head: [gameDatabase.getLang(selectedLanguage, 8074),
       gameDatabase.getLang(selectedLanguage, 70071),
       gameDatabase.getLang(selectedLanguage, 8046),
       '₽',
       '$',
     ],
-    body: getResourcesProduction(
-      gameDatabase,
-      saveGameDatabase,
-      selectedLanguage,
-      buildings,
-      priceDate
-    ),
+    body: producedResourceData.map((row) => [
+
+        <Checkbox
+          aria-label="Select row"
+          checked={ignoredResources.includes(row.resource)}
+          onChange={(event) =>
+            setIgnoredResources(
+              event.currentTarget.checked
+                ? [...ignoredResources, row.resource]
+                : ignoredResources.filter((resource) => resource !== row.resource)
+            )
+          }
+        />,
+        <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(row.resource))}</Text>,
+        <Tooltip multiline label={row.quantityHint}>
+          <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={` ${gameDatabase.getLang(selectedLanguage, 70059)}`} decimalScale={1} value={row.quantity} thousandSeparator /></Text>
+        </Tooltip>,
+        <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter suffix=" ₽" decimalScale={2} value={row.gainRubles} thousandSeparator /></Text>,
+        <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter suffix=" $" decimalScale={2} value={row.gainDollars} thousandSeparator /></Text>,
+
+    ])
   };
+
+  const totalWorkers = buildings.reduce((acc, building) => {
+    return (
+      acc +
+      building.productivity / 100.0 *
+        (gameDatabase.entities.get(building.building)?.getMaximumWorkers() || 0)
+    );
+  }, 0);
+
+  const totalRubles = producedResourceData.reduce((acc, resourceProduction) => {
+    return acc + (ignoredResources.includes(resourceProduction.resource) ? 0 : resourceProduction.gainRubles);
+  }, 0)
+
+  const totalDollars = producedResourceData.reduce((acc, resourceProduction) => {
+    return acc + (ignoredResources.includes(resourceProduction.resource) ? 0 : resourceProduction.gainDollars);
+  }, 0)
+
+  const rublesPerWorker = totalRubles / totalWorkers;
+  const dollarsPerWorker = totalDollars / totalWorkers;
 
   return (
     <Stack gap="xl">
@@ -302,21 +345,37 @@ export function ProductionGameContent({
       </Group>
       <Table data={buildingsTableData} captionSide="top" />
       <Table data={resourcesTableData} captionSide="top" />
-      <Table variant="vertical"  withTableBorder captionSide="top">
+      <Table variant="vertical" withTableBorder captionSide="top">
         <Table.Caption>{gameDatabase.getLang(selectedLanguage, 1659)}</Table.Caption>
         <Table.Tr>
           <Table.Th w={150}>{gameDatabase.getLang(selectedLanguage, 585)}</Table.Th>
-          <Table.Td>0</Table.Td>
+          <Table.Td>{totalWorkers}</Table.Td>
         </Table.Tr>
         <Table.Tr>
           <Table.Th>{gameDatabase.getLang(selectedLanguage, 1501)}</Table.Th>
-          <Table.Td><Text c={500 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' ₽'} decimalScale={2} value={500} thousandSeparator /></Text></Table.Td>
-          <Table.Td><Text c={400 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' $'} decimalScale={2} value={400} thousandSeparator /></Text></Table.Td>
+          <Table.Td>
+            <Text c={totalRubles >= 0 ? 'blue' : 'red'}>
+              <NumberFormatter suffix=" ₽" decimalScale={2} value={totalRubles} thousandSeparator />
+            </Text>
+          </Table.Td>
+          <Table.Td>
+            <Text c={totalDollars >= 0 ? 'blue' : 'red'}>
+              <NumberFormatter suffix=" $" decimalScale={2} value={totalDollars} thousandSeparator />
+            </Text>
+          </Table.Td>
         </Table.Tr>
         <Table.Tr>
           <Table.Th>{gameDatabase.getLang(selectedLanguage, 4114)}</Table.Th>
-          <Table.Td><Text c={50 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' ₽'} decimalScale={2} value={50} thousandSeparator /></Text></Table.Td>
-          <Table.Td><Text c={40 >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={' $'} decimalScale={2} value={40} thousandSeparator /></Text></Table.Td>
+          <Table.Td>
+            <Text c={rublesPerWorker >= 0 ? 'blue' : 'red'}>
+              <NumberFormatter suffix=" ₽" decimalScale={2} value={rublesPerWorker} thousandSeparator />
+            </Text>
+          </Table.Td>
+          <Table.Td>
+            <Text c={dollarsPerWorker >= 0 ? 'blue' : 'red'}>
+              <NumberFormatter suffix=" $" decimalScale={2} value={dollarsPerWorker} thousandSeparator />
+            </Text>
+          </Table.Td>
         </Table.Tr>
       </Table>
     </Stack>
