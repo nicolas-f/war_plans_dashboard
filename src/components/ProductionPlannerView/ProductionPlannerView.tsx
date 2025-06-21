@@ -162,8 +162,8 @@ function getResourcesProduction(
         }
       }
     });
-    return resources
-      .entries()
+    return Array.from(resources
+      .entries())
       .map(([key, value]) => {
         const gainRubles =
           value >= 0
@@ -185,8 +185,7 @@ function getResourcesProduction(
           gainRubles,
           gainDollars,
         }
-      })
-      .toArray();
+      });
   } 
     return [];
   
@@ -261,8 +260,8 @@ export function ProductionGameContent({
 
   // Generate building search data
   const buildingSelectionData: { group: string; items: ComboboxItem[] }[] = [];
-  gameDatabase.entities
-    .entries()
+  Array.from(gameDatabase.entities
+    .entries())
     .filter(
       (value) =>
         value[1].getLocalizedNameIndex() > 0 &&

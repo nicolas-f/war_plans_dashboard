@@ -83,10 +83,10 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
   }
   const [startDate, setStartDate] = useState<string | null>(initialStartDate);
   const [endDate, setEndDate] = useState<string | null>(initialEndDate);
-  const resourceLabels = resourcesLangIndex
-    .entries()
+  const resourceLabels = Array.from(resourcesLangIndex
+    .entries())
     .map((e) => ({ value: e[0], label: gameDatabase.getLang(selectedLanguage, e[1]) }))
-    .toArray().toSorted((a, b) => a.label.localeCompare(b.label));
+    .toSorted((a, b) => a.label.localeCompare(b.label));
   const [selectedResource, setSelectedResource] = useState(['clothes']);
   const chartData = selectedResource.map((e) => ({
     resource: e,

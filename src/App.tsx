@@ -190,7 +190,7 @@ export default function App() {
               <NativeSelect
                 value={selectedLanguage}
                 onChange={(event) => setSelectedLanguage(event.currentTarget.value)}
-                data={gameDatabase.translations.keys().toArray()}
+                data={Array.from(gameDatabase.translations.keys())}
               />
             </Group>
           </AppShell.Navbar>

@@ -45,10 +45,10 @@ export function GameDataView({ gameDatabase, saveGameDatabase, selectedLanguage}
   const [activePage, setPage] = useState(1);
 
 
-  const allData = gameDatabase.entities.entries()
+  const allData = Array.from(gameDatabase.entities.entries())
     .filter((e) => searchValue.trim().length === 0 ||
       gameDatabase.getLang(selectedLanguage,
-        e[1].getLocalizedNameIndex()).toLowerCase().indexOf(searchValue.toLowerCase()) > -1).toArray();
+        e[1].getLocalizedNameIndex()).toLowerCase().indexOf(searchValue.toLowerCase()) > -1);
 
   const entitiesChunks = chunk(allData,
     4
