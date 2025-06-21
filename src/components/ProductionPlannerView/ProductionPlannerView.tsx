@@ -181,7 +181,8 @@ function getResourcesProduction(
   
 }
 
-const dbKey = 'ProductionTableRows';
+const productionTableDbKey = 'ProductionTableRows';
+const ignoredResourcesDbKey = 'IgnoredResources';
 
 export function ProductionGameContent({
   gameDatabase,
@@ -201,6 +202,7 @@ export function ProductionGameContent({
   const [buildings, setBuildings] = useState<ProductionTableRow[]>([]);
   const [priceDate, setPriceDate] = useState<string | null>(initialEndDate);
   const [ignoredResources, setIgnoredResources] = useState<string[]>([]);
+  const [dataBaseDataLoaded, setDataBaseDataLoaded] = useState(false);
   const producedResourceData : resourceTableRow[] =  getResourcesProduction(
     gameDatabase,
     saveGameDatabase,
@@ -211,23 +213,40 @@ export function ProductionGameContent({
 
   React.useEffect(() => {
     const loadIndexedDbEntries= async () => {
-      const dbBuildings = await getStoreData<ProductionTableRow[]>(Stores.pagesState, dbKey)
+      const dbBuildings = await getStoreData<ProductionTableRow[]>(Stores.pagesState, productionTableDbKey)
       if (dbBuildings) {
         setBuildings(dbBuildings)
       }
+      const dbIgnoredResources = await getStoreData<string[]>(Stores.pagesState, ignoredResourcesDbKey)
+      if (dbIgnoredResources) {
+        setIgnoredResources(dbIgnoredResources)
+      }
     };
     loadIndexedDbEntries();
+    setDataBaseDataLoaded(true);
   }, [])
 
 
   React.useEffect(() => {
-    setStoreData(
-      Stores.pagesState,
-      dbKey,
-      buildings
-    );
-    console.log(`update database ${buildings}`)
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        productionTableDbKey,
+        buildings
+      );
+
+    }
   }, [buildings])
+
+  React.useEffect(() => {
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        ignoredResourcesDbKey,
+        ignoredResources
+      );
+    }
+  }, [ignoredResources])
 
   // Generate building search data
   const buildingSelectionData: { group: string; items: ComboboxItem[] }[] = [];
