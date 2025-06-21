@@ -16,10 +16,10 @@
  */
 
 import { Dropzone, DropzoneProps } from '@mantine/dropzone';
-import { Group, Stack, Text } from '@mantine/core';
+import { Group, Image, Stack, Text } from '@mantine/core';
 import { IconFileZip, IconUpload } from '@tabler/icons-react';
 import React from 'react';
-
+import five_year_plan_propaganda from '/src/assets/img/five_year_plan_propaganda.jpeg'
 
 export function SettingsView(props: DropzoneProps) {
 
@@ -52,6 +52,9 @@ export function SettingsView(props: DropzoneProps) {
         </div>
       </Group>
     </Dropzone>
+      <Image  radius="md" src={five_year_plan_propaganda} h={600}
+              w="auto"
+              fit="contain"/>
     </Stack>
   );
 }
