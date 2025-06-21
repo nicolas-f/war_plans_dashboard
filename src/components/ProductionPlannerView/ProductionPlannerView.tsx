@@ -18,10 +18,23 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { IconRowRemove } from '@tabler/icons-react';
-import { ActionIcon, Checkbox, Group, NumberFormatter, NumberInput, Select, Stack, Table, TableData, Text, Tooltip } from '@mantine/core';
+import {
+  ActionIcon,
+  Checkbox,
+  Group,
+  NumberFormatter,
+  NumberInput,
+  Select,
+  Space,
+  Stack,
+  Table,
+  TableData,
+  Text,
+  Tooltip,
+} from '@mantine/core';
 import { ComboboxItem } from '@mantine/core/lib/components/Combobox/Combobox.types';
 import { DatePickerInput } from '@mantine/dates';
-import { resourcesLangIndex } from '@/database/dataMap';
+import { languageNumericFormat, resourcesLangIndex } from '@/database/dataMap';
 import { getStoreData, setStoreData, Stores } from '@/database/db';
 import { Entity } from '@/database/entity';
 import { GameDatabase } from '@/database/gameDatabase';
@@ -128,7 +141,7 @@ function getResourcesProduction(
               quantity *
               numberOfBuildings *
               ((buildingEntity.getMaximumWorkers() * productivityBuildings) / 100);
-            const tooltip = `[${buildingLabel}: ${totalQuantity.toFixed(2)}] `;
+            const tooltip = `[${buildingLabel}: ${totalQuantity.toFixed(4)}] `;
             resourceQuantityTooltip.set(
               resource,
               (resourceQuantityTooltip.get(resource) || '') + tooltip
@@ -309,10 +322,10 @@ export function ProductionGameContent({
         />,
         <Text>{gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(row.resource))}</Text>,
         <Tooltip multiline label={row.quantityHint}>
-          <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter suffix={` ${gameDatabase.getLang(selectedLanguage, 70059)}`} decimalScale={1} value={row.quantity} thousandSeparator /></Text>
+          <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter decimalSeparator={languageNumericFormat.get(selectedLanguage)?.decimalSeparator} thousandSeparator={languageNumericFormat.get(selectedLanguage)?.thousandSeparator} suffix={` ${gameDatabase.getLang(selectedLanguage, 70059)}`} decimalScale={1} value={row.quantity} /></Text>
         </Tooltip>,
-        <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter suffix=" ₽" decimalScale={2} value={row.gainRubles} thousandSeparator /></Text>,
-        <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter suffix=" $" decimalScale={2} value={row.gainDollars} thousandSeparator /></Text>,
+        <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter decimalSeparator={languageNumericFormat.get(selectedLanguage)?.decimalSeparator} thousandSeparator={languageNumericFormat.get(selectedLanguage)?.thousandSeparator} suffix=" ₽" decimalScale={2} value={row.gainRubles} /></Text>,
+        <Text c={row.quantity >= 0 ? 'blue' : 'red'}><NumberFormatter decimalSeparator={languageNumericFormat.get(selectedLanguage)?.decimalSeparator} thousandSeparator={languageNumericFormat.get(selectedLanguage)?.thousandSeparator} suffix=" $" decimalScale={2} value={row.gainDollars} /></Text>,
 
     ])
   };
@@ -340,7 +353,8 @@ export function ProductionGameContent({
 
   return (
     <Stack gap="xl">
-      <Group grow>
+      <Space h="md" />
+      <Group grow >
         <DatePickerInput
           label={gameDatabase.getLang(selectedLanguage, 612)}
           value={priceDate}
@@ -375,12 +389,12 @@ export function ProductionGameContent({
           <Table.Th>{gameDatabase.getLang(selectedLanguage, 1501)}</Table.Th>
           <Table.Td>
             <Text c={totalRubles >= 0 ? 'blue' : 'red'}>
-              <NumberFormatter suffix=" ₽" decimalScale={2} value={totalRubles} thousandSeparator />
+              <NumberFormatter suffix=" ₽" decimalScale={2} value={totalRubles}  decimalSeparator={languageNumericFormat.get(selectedLanguage)?.decimalSeparator} thousandSeparator={languageNumericFormat.get(selectedLanguage)?.thousandSeparator}  />
             </Text>
           </Table.Td>
           <Table.Td>
             <Text c={totalDollars >= 0 ? 'blue' : 'red'}>
-              <NumberFormatter suffix=" $" decimalScale={2} value={totalDollars} thousandSeparator />
+              <NumberFormatter suffix=" $" decimalScale={2} value={totalDollars}  decimalSeparator={languageNumericFormat.get(selectedLanguage)?.decimalSeparator} thousandSeparator={languageNumericFormat.get(selectedLanguage)?.thousandSeparator}  />
             </Text>
           </Table.Td>
         </Table.Tr>
@@ -388,12 +402,12 @@ export function ProductionGameContent({
           <Table.Th>{gameDatabase.getLang(selectedLanguage, 4114)}</Table.Th>
           <Table.Td>
             <Text c={rublesPerWorker >= 0 ? 'blue' : 'red'}>
-              <NumberFormatter suffix=" ₽" decimalScale={2} value={rublesPerWorker} thousandSeparator />
+              <NumberFormatter suffix=" ₽" decimalScale={2} value={rublesPerWorker}  decimalSeparator={languageNumericFormat.get(selectedLanguage)?.decimalSeparator} thousandSeparator={languageNumericFormat.get(selectedLanguage)?.thousandSeparator}  />
             </Text>
           </Table.Td>
           <Table.Td>
             <Text c={dollarsPerWorker >= 0 ? 'blue' : 'red'}>
-              <NumberFormatter suffix=" $" decimalScale={2} value={dollarsPerWorker} thousandSeparator />
+              <NumberFormatter suffix=" $" decimalScale={2} value={dollarsPerWorker}  decimalSeparator={languageNumericFormat.get(selectedLanguage)?.decimalSeparator} thousandSeparator={languageNumericFormat.get(selectedLanguage)?.thousandSeparator}  />
             </Text>
           </Table.Td>
         </Table.Tr>
