@@ -62,15 +62,32 @@ export class SaveGameDatabase {
       indexes = indexes.filter((_, i) => i % step === 0)
     }
     const dataset = new Array<{date:number, value: number}>()
-    let date, location;
+    let date = 0
+    let location = 0
     for({ date, location } of indexes) {
       for(const key of keyTree) {
-        location = this.statistics.indexOf(key, location)
+        // for the last key do not look further than $end word
+        if(keyTree[keyTree.length - 1] === key) {
+          const endLocation = this.statistics.indexOf('$end', location)
+          location = this.statistics.indexOf(key, location)
+          if(location > endLocation) {
+            location = -1
+          }
+        } else {
+          location = this.statistics.indexOf(key, location)
+        }
+        if(location === -1) {
+          break
+        }
       }
-      const line = extractLine(this.statistics, location)
-      const data = getFloatAttributes(line[0])
-      if(data.length > 0) {
-        dataset.push({date, value:data[0]})
+      if(location === -1) {
+        dataset.push({date, value:0})
+      } else {
+        const line = extractLine(this.statistics, location)
+        const data = getFloatAttributes(line[0])
+        if(data.length > 0) {
+          dataset.push({date, value:data[0]})
+        }
       }
     }
     return dataset

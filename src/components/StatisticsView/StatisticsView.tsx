@@ -1,3 +1,6 @@
+import { s } from 'vitest/dist/chunks/reporters.d.DL9pg5DB';
+
+;
 /*
  * Copyright (C) 2025 -  Nicolas Fortin - https://github.com/nicolas-f
  *
@@ -15,18 +18,31 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { LineChart } from '@mantine/charts';
-import { darken, Group, lighten, luminance, MantineColor, MultiSelect, Stack, Tabs, Text } from '@mantine/core';
+import { darken, Group, lighten, luminance, MantineColor, MultiSelect, Space, Stack, Tabs, Text } from '@mantine/core';
 import { DefaultMantineColor } from '@mantine/core/lib/core/MantineProvider/theme.types';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
+
+
+
 import '@mantine/charts/styles.css';
+
+
+
 import React, { useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
 import { languageNumericFormat, resourcesLangIndex } from '@/database/dataMap';
+
+
+
 import '@mantine/dates/styles.css';
+
+
+
 import dayjs from 'dayjs';
-import { IconCurrencyRubel } from '@tabler/icons-react';
+import { IconCurrencyRubel, IconLoadBalancer, IconScale } from '@tabler/icons-react';
 import { getStoreData, setStoreData, Stores } from '@/database/db';
+
 
 export interface StatisticsViewProps {
   gameDatabase: GameDatabase;
@@ -77,18 +93,129 @@ const selectedResourceDbKey = 'selectedResource';
 const startDateStatsDbKey = 'startDateStats';
 const endDateStatsDbKey = 'endDateStats';
 
-function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: StatisticsViewProps) {
+interface PriceChartDataProps extends StatisticsViewProps {
+  startDate : string
+  endDate: string
+}
+
+function computeBalanceData(resource: string, startDate: string, endDate: string,
+                            saveGameDatabase: SaveGameDatabase): Array<{date:string, value: number}> {
+  const factoryConsumption = saveGameDatabase.getDataSet(
+    ['$Resources_SpendFactories', ` ${resource} `],
+    dayjs(startDate).valueOf(),
+    dayjs(endDate).valueOf(),
+    150
+  )
+  const factoryProduction = saveGameDatabase.getDataSet(
+    ['$Resources_Produced', ` ${resource} `],
+    dayjs(startDate).valueOf(),
+    dayjs(endDate).valueOf(),
+    150
+  )
+  const citizenConsumption = saveGameDatabase.getDataSet(
+    ['$Resources_SpendShops', ` ${resource} `],
+    dayjs(startDate).valueOf(),
+    dayjs(endDate).valueOf(),
+    150
+  )
+  const vehicleConsumption = saveGameDatabase.getDataSet(
+    ['$Resources_SpendVehicles', ` ${resource} `],
+    dayjs(startDate).valueOf(),
+    dayjs(endDate).valueOf(),
+    150
+  )
+
+
+
+  return factoryConsumption.map((e, index) => {
+    console.log(`production ${factoryProduction[index].value} consumption ${factoryConsumption[index].value} citizen ${citizenConsumption[index].value} vehicle ${vehicleConsumption[index].value}`)
+    return {
+      date: dayjs(e.date).format('YYYY-MM-DD'),
+      value: factoryProduction[index].value - e.value - citizenConsumption[index].value - vehicleConsumption[index].value,
+    }
+  })
+}
+
+
+function InteriorResourceBalanceChartData({ gameDatabase, saveGameDatabase, selectedLanguage, startDate, endDate} : PriceChartDataProps) {
+  const [selectedResource, setSelectedResource] = useState(['clothes']);
+  const resourceLabels = Array.from(resourcesLangIndex
+    .entries())
+    .map((e) => ({ value: e[0], label: gameDatabase.getLang(selectedLanguage, e[1]) }))
+    .toSorted((a, b) => a.label.localeCompare(b.label));
+
+  const chartData = selectedResource.map((e) => ({
+    resource: e,
+    data: computeBalanceData(e, startDate, endDate, saveGameDatabase),
+  }));
+
+  const data = [];
+
+  if (chartData.length > 0) {
+    const dates = chartData[0].data.map((e) => e.date);
+    let index = 0;
+    for (const d of dates) {
+      const record = { date: d };
+      for (const dataSet of chartData) {
+        addProperty(record, dataSet.resource, dataSet.data[index].value);
+      }
+      data.push(record);
+      index++;
+    }
+  }
+
+  const minBalance = chartData
+    .map((e) => e.data.reduce((a, b) => Math.min(a, b.value), Number.MAX_SAFE_INTEGER))
+    .reduce((a, b) => Math.min(a, b), Number.MAX_SAFE_INTEGER);
+
+  const maxBalance = chartData
+    .map((e) => e.data.reduce((a, b) => Math.max(a, b.value), Number.MIN_SAFE_INTEGER))
+    .reduce((a, b) => Math.max(a, b), Number.MIN_SAFE_INTEGER);
+
+  const series: { name: string; label: string }[] = selectedResource.map((e) => ({
+    name: e,
+    label: gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(e) || 0),
+  }));
+
+  return (
+    <Stack align="center" justify="center" gap="lg">
+      <MultiSelect
+        w={180}
+        value={selectedResource}
+        onChange={setSelectedResource}
+        label={gameDatabase.getLang(selectedLanguage, 755)}
+        data={resourceLabels}
+      />
+      <LineChart
+        h={300}
+        type="gradient"
+        gradientStops={[
+          { offset: 0, color: '#00973c' },
+          { offset: 20, color: '#1bc455' },
+          { offset: 40, color: '#a8f2c0' },
+          { offset: 70, color: '#fba0a0' },
+          { offset: 80, color: '#f21616' },
+          { offset: 100, color: '#a90003' },
+        ]}
+        curveType="natural"
+        withDots={false}
+        withLegend
+        data={data}
+        dataKey="date"
+        yAxisProps={{ domain: [-Math.max(-minBalance, maxBalance), Math.max(-minBalance, maxBalance)] }}
+        unit={` ${  gameDatabase.getLang(selectedLanguage, 590)}`}
+        valueFormatter={(value) =>
+         new Intl.NumberFormat((languageNumericFormat.get(selectedLanguage)?.locale) || 'en-US',
+            { maximumSignificantDigits: 1 }).format(value)}
+        series={series}
+      />
+    </Stack>
+  );
+}
+
+function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage, startDate, endDate} : PriceChartDataProps) {
   const [dataBaseDataLoaded, setDataBaseDataLoaded] = useState(false);
   // array of strings value when multiple is true
-  const lastEntry = saveGameDatabase.dateIndex.last();
-  let initialStartDate: string | null = null;
-  let initialEndDate: string | null = null;
-  if (lastEntry) {
-    initialEndDate = dayjs(lastEntry[0]).format('YYYY-MM-DD');
-    initialStartDate = dayjs(lastEntry[0]).subtract(1, 'year').format('YYYY-MM-DD');
-  }
-  const [startDate, setStartDate] = useState<string | null>(initialStartDate);
-  const [endDate, setEndDate] = useState<string | null>(initialEndDate);
   const resourceLabels = Array.from(resourcesLangIndex
     .entries())
     .map((e) => ({ value: e[0], label: gameDatabase.getLang(selectedLanguage, e[1]) }))
@@ -100,14 +227,6 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
       const dbSelectedResources = await getStoreData<string[]>(Stores.pagesState, selectedResourceDbKey)
       if (dbSelectedResources) {
         setSelectedResource(dbSelectedResources)
-      }
-      const dbStartDate = await getStoreData<string>(Stores.pagesState, startDateStatsDbKey)
-      if (dbStartDate) {
-        setStartDate(dbStartDate)
-      }
-      const dbEndDate = await getStoreData<string>(Stores.pagesState, endDateStatsDbKey)
-      if (dbEndDate) {
-        setEndDate(dbEndDate)
       }
     };
     loadIndexedDbEntries();
@@ -123,28 +242,6 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
       );
     }
   }, [selectedResource])
-
-  React.useEffect(() => {
-    if(dataBaseDataLoaded) {
-      setStoreData(
-        Stores.pagesState,
-        startDateStatsDbKey,
-        startDate
-      );
-    }
-  }, [startDate])
-
-  React.useEffect(() => {
-    if(dataBaseDataLoaded) {
-      setStoreData(
-        Stores.pagesState,
-        endDateStatsDbKey,
-        endDate
-      );
-    }
-  }, [endDate])
-
-
 
   const chartData = selectedResource.map((e) => ({
     resource: e,
@@ -176,25 +273,12 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
   }
   return (
     <Stack align="center" justify="center" gap="lg">
-      <Group>
-        <DatePickerInput
-          label={gameDatabase.getLang(selectedLanguage, 1653)}
-          value={startDate}
-          onChange={setStartDate}
-        />
-        <MultiSelect
-          w="200px"
-          value={selectedResource}
-          onChange={setSelectedResource}
-          label={gameDatabase.getLang(selectedLanguage, 755)}
-          data={resourceLabels}
-        />
-        <DatePickerInput
-          label={gameDatabase.getLang(selectedLanguage, 1654)}
-          value={endDate}
-          onChange={setEndDate}
-        />
-      </Group>
+      <MultiSelect
+        value={selectedResource}
+        onChange={setSelectedResource}
+        label={gameDatabase.getLang(selectedLanguage, 755)}
+        data={resourceLabels}
+      />
       <LineChart
         h={300}
         withDots={false}
@@ -215,15 +299,84 @@ export function StatisticsView({
   saveGameDatabase,
   selectedLanguage,
 }: StatisticsViewProps) {
+
+  const [dataBaseDataLoaded, setDataBaseDataLoaded] = useState(false);
+  // array of strings value when multiple is true
+  const lastEntry = saveGameDatabase.dateIndex.last();
+  let initialStartDate: string = dayjs().subtract(1, 'year').format('YYYY-MM-DD');
+  let initialEndDate: string = dayjs().format('YYYY-MM-DD');
+  if (lastEntry) {
+    initialEndDate = dayjs(lastEntry[0]).format('YYYY-MM-DD');
+    initialStartDate = dayjs(lastEntry[0]).subtract(1, 'year').format('YYYY-MM-DD');
+  }
+  const [startDate, setStartDate] = useState<string>(initialStartDate);
+  const [endDate, setEndDate] = useState<string>(initialEndDate);
+
+
+  React.useEffect(() => {
+    const loadIndexedDbEntries= async () => {
+      const dbStartDate = await getStoreData<string>(Stores.pagesState, startDateStatsDbKey)
+      if (dbStartDate) {
+        setStartDate(dbStartDate)
+      }
+      const dbEndDate = await getStoreData<string>(Stores.pagesState, endDateStatsDbKey)
+      if (dbEndDate) {
+        setEndDate(dbEndDate)
+      }
+    };
+    loadIndexedDbEntries();
+    setDataBaseDataLoaded(true);
+  }, [])
+
+
+  React.useEffect(() => {
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        startDateStatsDbKey,
+        startDate
+      );
+    }
+  }, [startDate])
+
+  React.useEffect(() => {
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        endDateStatsDbKey,
+        endDate
+      );
+    }
+  }, [endDate])
+
+
+
+
   return (
     <Stack>
+      <Space h="xl" />
       <Text size="md">
         Basic chart, you may give feedback in order to display more useful statistics
       </Text>
+      <Group grow>
+        <DatePickerInput
+          label={gameDatabase.getLang(selectedLanguage, 1653)}
+          value={startDate}
+          onChange={setStartDate}
+        />
+        <DatePickerInput
+          label={gameDatabase.getLang(selectedLanguage, 1654)}
+          value={endDate}
+          onChange={setEndDate}
+        />
+      </Group>
       <Tabs defaultValue="prices">
         <Tabs.List>
           <Tabs.Tab value="prices" leftSection={<IconCurrencyRubel size={24} />}>
             {gameDatabase.getLang(selectedLanguage, 2130)}
+          </Tabs.Tab>
+          <Tabs.Tab value="production_balance" leftSection={<IconScale size={24} />}>
+            {gameDatabase.getLang(selectedLanguage, 1511)}
           </Tabs.Tab>
         </Tabs.List>
 
@@ -232,6 +385,17 @@ export function StatisticsView({
             gameDatabase={gameDatabase}
             saveGameDatabase={saveGameDatabase}
             selectedLanguage={selectedLanguage}
+            startDate={startDate}
+            endDate={endDate}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value="production_balance">
+          <InteriorResourceBalanceChartData
+            gameDatabase={gameDatabase}
+            saveGameDatabase={saveGameDatabase}
+            selectedLanguage={selectedLanguage}
+            startDate={startDate}
+            endDate={endDate}
           />
         </Tabs.Panel>
       </Tabs>
