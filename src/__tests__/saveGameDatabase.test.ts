@@ -52,4 +52,8 @@ test('testParseStats', () => {
       value: 1384.155151,
     },
   ]);
+
+  const fuelPrice = saveGameDatabase.getData(['$Economy_SellCostRUB', ' fuel '], saveGameDatabase.currentStateIndex)[0]
+
+  expect(fuelPrice).closeTo(2903.161133, 0.1)
 });

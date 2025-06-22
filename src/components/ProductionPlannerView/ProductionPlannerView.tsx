@@ -167,15 +167,15 @@ function getResourcesProduction(
       .map(([key, value]) => {
         const gainRubles =
           value >= 0
-            ? saveGameDatabase.getData(['$Economy_SellCostRUB', key], saveGameIndex.value)[0] *
+            ? saveGameDatabase.getData(['$Economy_SellCostRUB', ` ${key} `], saveGameIndex.value)[0] *
               value
-            : saveGameDatabase.getData(['$Economy_PurchaseCostRUB', key], saveGameIndex.value)[0] *
+            : saveGameDatabase.getData(['$Economy_PurchaseCostRUB', ` ${key} `], saveGameIndex.value)[0] *
               value;
         const gainDollars =
           value >= 0
-            ? saveGameDatabase.getData(['$Economy_SellCostUSD', key], saveGameIndex.value)[0] *
+            ? saveGameDatabase.getData(['$Economy_SellCostUSD', ` ${key} `], saveGameIndex.value)[0] *
               value
-            : saveGameDatabase.getData(['$Economy_PurchaseCostUSD', key], saveGameIndex.value)[0] *
+            : saveGameDatabase.getData(['$Economy_PurchaseCostUSD', ` ${key} `], saveGameIndex.value)[0] *
               value;
 
         return {

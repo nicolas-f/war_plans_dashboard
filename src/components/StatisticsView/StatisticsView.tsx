@@ -91,7 +91,7 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
   const chartData = selectedResource.map((e) => ({
     resource: e,
     data: saveGameDatabase.getDataSet(
-      ['$Economy_PurchaseCostRUB', e],
+      ['$Economy_PurchaseCostRUB', ` ${e} `],
       dayjs(startDate).valueOf(),
       dayjs(endDate).valueOf(),
       150
