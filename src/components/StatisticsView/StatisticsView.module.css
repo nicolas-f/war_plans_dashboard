@@ -1,0 +1,9 @@
+.root {
+    @mixin light {
+        --line-color: var(--mantine-color-green-8);
+    }
+
+    @mixin dark {
+        --line-color: var(--mantine-color-green-2);
+    }
+}

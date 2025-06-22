@@ -19,10 +19,9 @@ import { s } from 'vitest/dist/chunks/reporters.d.DL9pg5DB';
  */
 import { LineChart } from '@mantine/charts';
 import { darken, Group, lighten, luminance, MantineColor, MultiSelect, Space, Stack, Tabs, Text } from '@mantine/core';
-import { DefaultMantineColor } from '@mantine/core/lib/core/MantineProvider/theme.types';
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
-
+import classes from './StatisticsView.module.css';
 
 
 import '@mantine/charts/styles.css';
@@ -52,6 +51,14 @@ export interface StatisticsViewProps {
 
 function addProperty(object: any, property: any, value: any) {
   return Object.assign(object, { [property]: value });
+}
+
+function roundToUpperTen(num: number): number {
+  return Math.ceil(num / 10) * 10;
+}
+
+function roundToLowerTen(num: number): number {
+  return Math.floor(num / 10) * 10;
 }
 
 function stringToColor(input: string, luminanceTarget : number): string {
@@ -128,7 +135,7 @@ function computeBalanceData(resource: string, startDate: string, endDate: string
 
 
   return factoryConsumption.map((e, index) => {
-    console.log(`production ${factoryProduction[index].value} consumption ${factoryConsumption[index].value} citizen ${citizenConsumption[index].value} vehicle ${vehicleConsumption[index].value}`)
+    //console.log(`production ${factoryProduction[index].value} consumption ${factoryConsumption[index].value} citizen ${citizenConsumption[index].value} vehicle ${vehicleConsumption[index].value}`)
     return {
       date: dayjs(e.date).format('YYYY-MM-DD'),
       value: factoryProduction[index].value - e.value - citizenConsumption[index].value - vehicleConsumption[index].value,
@@ -136,9 +143,33 @@ function computeBalanceData(resource: string, startDate: string, endDate: string
   })
 }
 
+const InteriorResourceDataDbKey = 'InteriorResourceData';
 
 function InteriorResourceBalanceChartData({ gameDatabase, saveGameDatabase, selectedLanguage, startDate, endDate} : PriceChartDataProps) {
   const [selectedResource, setSelectedResource] = useState(['clothes']);
+  const [dataBaseDataLoaded, setDataBaseDataLoaded] = useState(false);
+
+  React.useEffect(() => {
+    const loadIndexedDbEntries= async () => {
+      const dbSelectedResources = await getStoreData<string[]>(Stores.pagesState, InteriorResourceDataDbKey)
+      if (dbSelectedResources) {
+        setSelectedResource(dbSelectedResources)
+      }
+    };
+    loadIndexedDbEntries();
+    setDataBaseDataLoaded(true);
+  }, [])
+
+  React.useEffect(() => {
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        InteriorResourceDataDbKey,
+        selectedResource
+      );
+    }
+  }, [selectedResource])
+
   const resourceLabels = Array.from(resourcesLangIndex
     .entries())
     .map((e) => ({ value: e[0], label: gameDatabase.getLang(selectedLanguage, e[1]) }))
@@ -164,17 +195,18 @@ function InteriorResourceBalanceChartData({ gameDatabase, saveGameDatabase, sele
     }
   }
 
-  const minBalance = chartData
+  const minBalance = roundToLowerTen(chartData
     .map((e) => e.data.reduce((a, b) => Math.min(a, b.value), Number.MAX_SAFE_INTEGER))
-    .reduce((a, b) => Math.min(a, b), Number.MAX_SAFE_INTEGER);
+    .reduce((a, b) => Math.min(a, b), Number.MAX_SAFE_INTEGER));
 
-  const maxBalance = chartData
+  const maxBalance = roundToUpperTen(chartData
     .map((e) => e.data.reduce((a, b) => Math.max(a, b.value), Number.MIN_SAFE_INTEGER))
-    .reduce((a, b) => Math.max(a, b), Number.MIN_SAFE_INTEGER);
+    .reduce((a, b) => Math.max(a, b), Number.MIN_SAFE_INTEGER));
 
   const series: { name: string; label: string }[] = selectedResource.map((e) => ({
     name: e,
     label: gameDatabase.getLang(selectedLanguage, resourcesLangIndex.get(e) || 0),
+    color: stringToColor(e, 0.5)
   }));
 
   return (
@@ -188,21 +220,17 @@ function InteriorResourceBalanceChartData({ gameDatabase, saveGameDatabase, sele
       />
       <LineChart
         h={300}
-        type="gradient"
-        gradientStops={[
-          { offset: 0, color: '#00973c' },
-          { offset: 20, color: '#1bc455' },
-          { offset: 40, color: '#a8f2c0' },
-          { offset: 70, color: '#fba0a0' },
-          { offset: 80, color: '#f21616' },
-          { offset: 100, color: '#a90003' },
-        ]}
-        curveType="natural"
+        className={classes.root}
+        curveType="linear"
         withDots={false}
         withLegend
         data={data}
         dataKey="date"
-        yAxisProps={{ domain: [-Math.max(-minBalance, maxBalance), Math.max(-minBalance, maxBalance)] }}
+        referenceLines={[
+          { y: 0, label: '0 t', color: 'var(--line-color)' },
+        ]}
+        xAxisLabel={gameDatabase.getLang(selectedLanguage, 612)}
+        yAxisProps={{domain: [-Math.max(-minBalance, maxBalance), Math.max(-minBalance, maxBalance)] }}
         unit={` ${  gameDatabase.getLang(selectedLanguage, 590)}`}
         valueFormatter={(value) =>
          new Intl.NumberFormat((languageNumericFormat.get(selectedLanguage)?.locale) || 'en-US',
@@ -281,6 +309,7 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage, star
       />
       <LineChart
         h={300}
+        xAxisLabel={gameDatabase.getLang(selectedLanguage, 612)}
         withDots={false}
         withLegend
         data={data}
@@ -288,7 +317,7 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage, star
         unit="₽"
         valueFormatter={(value) => new Intl.NumberFormat((languageNumericFormat.get(selectedLanguage)?.locale) || 'en-US').format(value)}
         series={series}
-        curveType="linear"
+        curveType="natural"
       />
     </Stack>
   );
