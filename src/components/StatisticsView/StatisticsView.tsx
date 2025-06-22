@@ -20,12 +20,13 @@ import { DefaultMantineColor } from '@mantine/core/lib/core/MantineProvider/them
 import { GameDatabase } from '@/database/gameDatabase';
 import { SaveGameDatabase } from '@/database/saveGameDatabase';
 import '@mantine/charts/styles.css';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
-import { resourcesLangIndex } from '@/database/dataMap';
+import { languageNumericFormat, resourcesLangIndex } from '@/database/dataMap';
 import '@mantine/dates/styles.css';
 import dayjs from 'dayjs';
 import { IconCurrencyRubel } from '@tabler/icons-react';
+import { getStoreData, setStoreData, Stores } from '@/database/db';
 
 export interface StatisticsViewProps {
   gameDatabase: GameDatabase;
@@ -72,7 +73,12 @@ function stringToColor(input: string, luminanceTarget : number): string {
   return colorString
 }
 
+const selectedResourceDbKey = 'selectedResource';
+const startDateStatsDbKey = 'startDateStats';
+const endDateStatsDbKey = 'endDateStats';
+
 function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: StatisticsViewProps) {
+  const [dataBaseDataLoaded, setDataBaseDataLoaded] = useState(false);
   // array of strings value when multiple is true
   const lastEntry = saveGameDatabase.dateIndex.last();
   let initialStartDate: string | null = null;
@@ -88,6 +94,58 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
     .map((e) => ({ value: e[0], label: gameDatabase.getLang(selectedLanguage, e[1]) }))
     .toSorted((a, b) => a.label.localeCompare(b.label));
   const [selectedResource, setSelectedResource] = useState(['clothes']);
+
+  React.useEffect(() => {
+    const loadIndexedDbEntries= async () => {
+      const dbSelectedResources = await getStoreData<string[]>(Stores.pagesState, selectedResourceDbKey)
+      if (dbSelectedResources) {
+        setSelectedResource(dbSelectedResources)
+      }
+      const dbStartDate = await getStoreData<string>(Stores.pagesState, startDateStatsDbKey)
+      if (dbStartDate) {
+        setStartDate(dbStartDate)
+      }
+      const dbEndDate = await getStoreData<string>(Stores.pagesState, endDateStatsDbKey)
+      if (dbEndDate) {
+        setEndDate(dbEndDate)
+      }
+    };
+    loadIndexedDbEntries();
+    setDataBaseDataLoaded(true);
+  }, [])
+
+  React.useEffect(() => {
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        selectedResourceDbKey,
+        selectedResource
+      );
+    }
+  }, [selectedResource])
+
+  React.useEffect(() => {
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        startDateStatsDbKey,
+        startDate
+      );
+    }
+  }, [startDate])
+
+  React.useEffect(() => {
+    if(dataBaseDataLoaded) {
+      setStoreData(
+        Stores.pagesState,
+        endDateStatsDbKey,
+        endDate
+      );
+    }
+  }, [endDate])
+
+
+
   const chartData = selectedResource.map((e) => ({
     resource: e,
     data: saveGameDatabase.getDataSet(
@@ -125,6 +183,7 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
           onChange={setStartDate}
         />
         <MultiSelect
+          w="200px"
           value={selectedResource}
           onChange={setSelectedResource}
           label={gameDatabase.getLang(selectedLanguage, 755)}
@@ -143,7 +202,7 @@ function PriceChartData({ gameDatabase, saveGameDatabase, selectedLanguage }: St
         data={data}
         dataKey="date"
         unit="₽"
-        valueFormatter={(value) => new Intl.NumberFormat('en-US').format(value)}
+        valueFormatter={(value) => new Intl.NumberFormat((languageNumericFormat.get(selectedLanguage)?.locale) || 'en-US').format(value)}
         series={series}
         curveType="linear"
       />
