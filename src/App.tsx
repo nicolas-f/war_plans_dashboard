@@ -198,16 +198,17 @@ export default function App() {
             {(() => {
               switch (activePage) {
                 case 'settings':
-                  return <><SettingsView
+                  return <>
+                    {
+                      displayUploadedState &&
+                      <Notification icon={checkIcon} color="teal" title="All good!" mt="md">
+                        Save game data uploaded successfully !
+                      </Notification>
+                    }
+                    <SettingsView
                     loading={savegameLoading}
                     onDrop={onDropFile}
                     onReject={(files) => console.log('rejected files', files)}/>
-                    {
-                      displayUploadedState &&
-                    <Notification icon={checkIcon} color="teal" title="All good!" mt="md">
-                      Save game data uploaded successfully !
-                    </Notification>
-                    }
                   </>;
 
                 case 'gamedata':
