@@ -80,12 +80,13 @@ function getBuildingsDataTable(
       <IconRowRemove />
     </ActionIcon>,
     <Text>
-      {gameDatabase.entities.get(element.building)!.getLocalizedNameIndex() > 0
+      {(gameDatabase.entities.get(element.building)?.getLocalizedNameIndex() || 0) > 0
         ? gameDatabase.getLang(
             selectedLanguage,
-            gameDatabase.entities.get(element.building)!.getLocalizedNameIndex()
+            (gameDatabase.entities.get(element.building)?.getLocalizedNameIndex() || 0)
+          , "undefined"
           )
-        : gameDatabase.entities.get(element.building)!.name}
+        : (gameDatabase.entities.get(element.building)?.name) || "undefined"}
     </Text>,
     <NumberInput
       min={0}
@@ -139,7 +140,7 @@ function getResourcesProduction(
             const totalQuantity =
               quantity *
               numberOfBuildings *
-              ((buildingEntity.getMaximumWorkers() * productivityBuildings) / 100);
+              ((Math.max(1, buildingEntity.getMaximumWorkers()) * productivityBuildings) / 100);
             const tooltip = `[${buildingLabel}: ${totalQuantity.toFixed(4)}] `;
             resourceQuantityTooltip.set(
               resource,
@@ -151,7 +152,7 @@ function getResourcesProduction(
             const totalQuantity =
               quantity *
               numberOfBuildings *
-              ((buildingEntity.getMaximumWorkers() * productivityBuildings) / 100);
+              ((Math.max(1, buildingEntity.getMaximumWorkers()) * productivityBuildings) / 100);
             const tooltip = `[${buildingLabel}: -${totalQuantity.toFixed(2)}] `;
             resourceQuantityTooltip.set(
               resource,
@@ -265,18 +266,16 @@ export function ProductionGameContent({
     .filter(
       (value) =>
         value[1].getLocalizedNameIndex() > 0 &&
-        (value[1].getMaximumWorkers() > 0 || value[1].getLivingPopulation() > 0)
+        (value[1].getProduction().length > 0)
     )
     .forEach((value: [string, Entity]) => {
       const group = value[1].getType();
-      const maxWorker = value[1].getMaximumWorkers();
-      const maxPopulation = value[1].getLivingPopulation();
+      const modern = value[1].isModern();
       const label =
-        maxWorker > 0
+        modern
           ? `${gameDatabase.getLang(selectedLanguage, value[1].getLocalizedNameIndex())}
-     - ${maxWorker} ${gameDatabase.getLang(selectedLanguage, 585)}`
-          : `${gameDatabase.getLang(selectedLanguage, value[1].getLocalizedNameIndex())}
-     - ${maxPopulation} ${gameDatabase.getLang(selectedLanguage, 2810)}`;
+     (${gameDatabase.getLang(selectedLanguage, 11446)})`
+          : `${gameDatabase.getLang(selectedLanguage, value[1].getLocalizedNameIndex())}`;
       const comboboxItem: ComboboxItem = { value: value[1].name, label };
       const index = buildingSelectionData.findIndex((e) => e.group === group);
       if (index === -1) {
@@ -334,7 +333,7 @@ export function ProductionGameContent({
     return (
       acc +
       buildingProductivity / 100.0 * buildingCount *
-        (gameDatabase.entities.get(building.building)?.getMaximumWorkers() || 0)
+        (Math.max(1, gameDatabase.entities.get(building.building)?.getMaximumWorkers() || 0))
     );
   }, 0);
 

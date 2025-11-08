@@ -135,10 +135,15 @@ export class Entity {
   getType() : string {
     return this.getStringAttribute("$TYPE_")
   }
+  
+  isModern(): boolean {
+    return this.getStringAttribute("$STYLE_FLAG") === "modern_industry"
+  }
 
   getMaximumWorkers() : number {
-    // String 585: "Travailleurs"
-    return this.getIntAttribute("$WORKERS_NEEDED")
+    const worker = this.getIntAttribute("$WORKERS_NEEDED")
+    const professors = this.getIntAttribute("$PROFESORS_NEEDED")
+    return (isNaN(worker) ? 0 : worker)  + (isNaN(professors) ? 0 : professors)
   }
 
   private getResourceData(prefix: string) {

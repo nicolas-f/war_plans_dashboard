@@ -25,7 +25,7 @@ import { GameDatabase } from '@/database/gameDatabase';
 function parseIniFile(name : string, data : string, db : GameDatabase) {
   const entity = new Entity(name)
   entity.data = data
-  if(entity.getType().length > 0) {
+  if(entity.getType().length > 0 && entity.data.indexOf("$OBSOLETE") === -1) {
     db.entities.set(name, entity)
   }
 }
